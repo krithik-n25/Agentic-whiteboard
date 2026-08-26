@@ -17,7 +17,7 @@ function Provider({ children }: { children: React.ReactNode }) {
     setUserDetails(result.data);
   };
   return (
-    <UserDetailContext.Provider value={{}}>
+    <UserDetailContext.Provider value={userDetails}>
       <div>{children}</div>
     </UserDetailContext.Provider>
   )

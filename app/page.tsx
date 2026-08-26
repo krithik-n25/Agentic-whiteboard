@@ -6,7 +6,7 @@ export default function Home() {
       <div style={styles.hero}>
         <div style={styles.badge}>Next.js Boilerplate CLI 🚀</div>
         <h1 style={styles.title}>
-          Hello world <span style={styles.gradient}>Is Ready</span>
+          Agentic Whiteboard <span style={styles.gradient}>Is Ready</span>
         </h1>
         <p style={styles.subtitle}>
           Congratulations! Your customized Next.js boilerplate has been successfully scaffolded with all your selected databases, components, and authentication configurations.
