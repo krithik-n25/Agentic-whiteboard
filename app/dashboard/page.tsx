@@ -3,7 +3,7 @@ import { UserButton } from '@clerk/nextjs'
 function DashboardPage() {
   return (
     <div>
-        <UserButton/>
+        {/* <UserButton/> */}
     </div>
   )
 }

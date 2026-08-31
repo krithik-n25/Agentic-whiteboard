@@ -1,8 +1,8 @@
+import AppHeader from "@/components/custom/dashboard/AppHeader";
 import { AppSidebar } from "@/components/custom/dashboard/AppSidebar";
 import {
   SidebarInset,
   SidebarProvider,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 
 export default function DashboardLayout({
@@ -16,7 +16,7 @@ export default function DashboardLayout({
 
       <SidebarInset>
         <header className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-4">
-          <SidebarTrigger />
+          <AppHeader />
         </header>
 
         <main className="flex-1 bg-background p-6">
