@@ -44,7 +44,7 @@ export function AppSidebar() {
         <SidebarGroup className="px-4">
           <Button
             // variant="ghost"
-            className="text-md font-semibold w-full justify-start text-sidebar-foreground"  
+            className="text-md font-semibold w-full justify-start text-sidebar-foreground "  
           >
             + Create New Board
           </Button>
