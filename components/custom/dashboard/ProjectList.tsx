@@ -2,6 +2,7 @@
 import React, { useState } from 'react'
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import CreatenewBoardDialog from './CreatenewBoardDialog';
 
 function ProjectList() {
 
@@ -15,7 +16,7 @@ function ProjectList() {
           <div className='text-center'>
             <h1 className='text-2xl font-bold'>No Board Found</h1>
             <p className='text-muted-foreground mb-2'>Create Your First board, start planning!</p>
-            <Button>+ Create Project</Button>
+            <CreatenewBoardDialog />
           </div>
         </div>
       ) :
