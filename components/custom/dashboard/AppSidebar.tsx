@@ -15,6 +15,8 @@ import { Archive, FileIcon, LayoutGrid, Settings, Sparkle, UserRound } from "luc
 import { usePathname } from "next/navigation";
 import { Progress } from "@/components/ui/progress";
 import { useUser } from "@clerk/nextjs";
+import CreatenewBoardDialog from "./CreatenewBoardDialog";
+
 
 
 export function AppSidebar() {
@@ -42,12 +44,7 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup className="px-4">
-          <Button
-            // variant="ghost"
-            className="text-md font-semibold w-full justify-start text-sidebar-foreground "  
-          >
-            + Create New Board
-          </Button>
+          <CreatenewBoardDialog/>
           
         </SidebarGroup>
         <SidebarGroup>
@@ -78,12 +75,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <Button
-            // variant="ghost"
-            className="text-md  font-semibold w-full justify-start text-sidebar-foreground"
-          >
-            + Create New Board
-          </Button>
+        <CreatenewBoardDialog/>
           <div className="p-4 my-3 border rounded-md">
              <h2 className="text-sm flex justify-between mb-1">2 file created<span>total 3</span></h2>
              <Progress value={62} className="h-2 mt-3"/>
