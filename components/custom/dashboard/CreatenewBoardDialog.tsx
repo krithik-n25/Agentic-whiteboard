@@ -12,31 +12,61 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from '@/components/ui/button'
 import { Input } from "@/components/ui/input"
-import { Plus } from 'lucide-react'
+import { Loader2, Plus } from 'lucide-react'
 import { toast } from '@/components/ui/toast'
+import axios from 'axios'
+import { useRouter } from 'next/navigation'
 
 
 function CreatenewBoardDialog() {
 
     const [WorkspaceName, setWorkspaceName] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [open, setOpen] = useState(false);
+    const route=useRouter();
 
-    const handlecreateboard = () => {
+    const handlecreateboard = async () => {
         if (WorkspaceName.trim() === "" || WorkspaceName.length > 30) {
             toast.add({
-                title:"Error",
-                description:"Workspace Name must be between 1 and 30 characters",
-                type:"error"
+                title: "Error",
+                description: "Workspace Name must be between 1 and 30 characters",
+                type: "error"
             })
             return;
+        }
+        try {
+            setLoading(true);
+            const projectID = crypto.randomUUID();
+
+            const result = await axios.post('/api/projects', {
+                projectName: WorkspaceName,
+                projectId: projectID
+            })
+
+            console.log(result?.data);
+            toast.add({
+                title: "New Workspace Created",
+                type: "success"
+            })
+            setWorkspaceName("");
+            setOpen(false);
+            route.push(`/workspace/${result?.data?.projectId}`)
+        } catch (error) {
+            console.error("Failed to create board:", error);
+            toast.add({
+                title: "Error",
+                description: "Failed to create board. Please try again.",
+                type: "error"
+            })
+        } finally {
+            setLoading(false);
         }
     }
 
     return (
-        <Dialog>
-            <DialogTrigger >
-                <Button className="w-full gap-2">
-                    <Plus /> Create New Board
-                </Button>
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger render={<Button />}>
+                <Plus /> Create New Board
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
@@ -52,13 +82,14 @@ function CreatenewBoardDialog() {
                     />
                 </div>
                 <DialogFooter>
-                <DialogClose>
-                        <Button variant="outline">
-                            Cancel
-                        </Button>
+                    <DialogClose render={<Button variant="outline" />}>
+                        Cancel
                     </DialogClose>
-                    <Button disabled={WorkspaceName?.length===0}
-                    onClick={handlecreateboard}>
+                    <Button
+                        disabled={WorkspaceName.trim().length === 0 || loading}
+                        onClick={handlecreateboard}
+                    >
+                        {loading && <Loader2 className='animate-spin' />}
                         Create
                     </Button>
                 </DialogFooter>
