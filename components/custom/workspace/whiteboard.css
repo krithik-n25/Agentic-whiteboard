@@ -1,0 +1,522 @@
+/* =========================================
+   MAIN WHITEBOARD
+========================================= */
+
+.whiteboard-container {
+  position: relative;
+  width: 100%;
+  height: 90vh;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.excalidraw-wrapper {
+  width: 100%;
+  height: 100%;
+}
+
+
+/* =========================================
+   CUSTOM TOOLBAR
+========================================= */
+
+.custom-toolbar {
+  position: absolute;
+
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  width: 54px;
+
+  padding: 10px 7px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  background: rgba(255, 255, 255, 0.88);
+
+  border: 1px solid rgba(0, 0, 0, 0.08);
+
+  border-radius: 18px;
+
+  box-shadow:
+    0 10px 35px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.04);
+
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+
+  z-index: 1000;
+
+  transition:
+    width 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+
+/* =========================================
+   BRAND
+========================================= */
+
+.toolbar-brand {
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 11px;
+
+  background: linear-gradient(
+    135deg,
+    #7c5cff,
+    #9b8aff
+  );
+
+  color: white;
+
+  margin-bottom: 5px;
+
+  box-shadow:
+    0 5px 15px rgba(124, 92, 255, 0.25);
+}
+
+
+/* =========================================
+   GROUP
+========================================= */
+
+.toolbar-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 4px;
+}
+
+
+/* =========================================
+   DIVIDER
+========================================= */
+
+.toolbar-divider {
+  width: 28px;
+  height: 1px;
+
+  background: rgba(0, 0, 0, 0.08);
+
+  margin: 8px 0;
+}
+
+
+/* =========================================
+   TOOL BUTTON
+========================================= */
+
+.tool-button {
+  --tool-color: #6366f1;
+
+  position: relative;
+
+  width: 38px;
+  height: 38px;
+
+  border: none;
+  outline: none;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 11px;
+
+  background: transparent;
+
+  color: #555;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s cubic-bezier(.2,.8,.2,1),
+    box-shadow 0.2s ease;
+}
+
+
+/* =========================================
+   HOVER
+========================================= */
+
+.tool-button:hover {
+  color: var(--tool-color);
+
+  background: color-mix(
+    in srgb,
+    var(--tool-color) 11%,
+    transparent
+  );
+
+  transform: translateX(3px) scale(1.08);
+
+  box-shadow:
+    0 6px 16px
+    color-mix(
+      in srgb,
+      var(--tool-color) 16%,
+      transparent
+    );
+}
+
+
+/* =========================================
+   ICON HOVER
+========================================= */
+
+.tool-button:hover svg {
+  filter:
+    drop-shadow(
+      0 2px 5px
+      color-mix(
+        in srgb,
+        var(--tool-color) 35%,
+        transparent
+      )
+    );
+
+  transform: scale(1.08);
+
+  transition: transform 0.2s ease;
+}
+
+
+/* =========================================
+   ACTIVE TOOL
+========================================= */
+
+.tool-button.active {
+  color: var(--tool-color);
+
+  background: color-mix(
+    in srgb,
+    var(--tool-color) 15%,
+    white
+  );
+
+  box-shadow:
+    inset 0 0 0 1px
+    color-mix(
+      in srgb,
+      var(--tool-color) 22%,
+      transparent
+    ),
+
+    0 5px 14px
+    color-mix(
+      in srgb,
+      var(--tool-color) 18%,
+      transparent
+    );
+
+  transform: translateX(2px);
+}
+
+
+/* =========================================
+   ACTIVE ICON
+========================================= */
+
+.tool-button.active svg {
+  filter:
+    drop-shadow(
+      0 2px 4px
+      color-mix(
+        in srgb,
+        var(--tool-color) 35%,
+        transparent
+      )
+    );
+}
+
+
+/* =========================================
+   ACTIVE INDICATOR
+========================================= */
+
+.tool-button.active::before {
+  content: "";
+
+  position: absolute;
+
+  left: -8px;
+
+  width: 3px;
+  height: 20px;
+
+  border-radius: 20px;
+
+  background: var(--tool-color);
+
+  box-shadow:
+    0 0 8px
+    color-mix(
+      in srgb,
+      var(--tool-color) 50%,
+      transparent
+    );
+
+  animation: activeIndicator 0.25s ease;
+}
+
+
+@keyframes activeIndicator {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+
+  to {
+    height: 20px;
+    opacity: 1;
+  }
+}
+
+.tool-button:active {
+  transform: translateX(2px) scale(0.91);
+
+  transition-duration: 0.06s;
+}
+
+.tool-button::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  border-radius: inherit;
+
+  background:
+    radial-gradient(
+      circle at center,
+      color-mix(
+        in srgb,
+        var(--tool-color) 18%,
+        transparent
+      ),
+      transparent 70%
+    );
+
+  opacity: 0;
+
+  transform: scale(0.5);
+
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+
+  pointer-events: none;
+}
+
+
+.tool-button:hover::after {
+  opacity: 1;
+
+  transform: scale(1.2);
+}
+/* =========================================
+   TOOLTIP
+========================================= */
+
+.tool-tooltip {
+  position: absolute;
+
+  left: 48px;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  white-space: nowrap;
+
+  padding: 7px 10px;
+
+  border-radius: 8px;
+
+  background: #171717;
+  color: white;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  opacity: 0;
+  pointer-events: none;
+
+  transform: translateX(-5px);
+
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+
+  box-shadow:
+    0 5px 20px rgba(0, 0, 0, 0.15);
+}
+
+
+/* Tooltip arrow */
+
+.tool-tooltip::before {
+  content: "";
+
+  position: absolute;
+
+  left: -4px;
+
+  width: 8px;
+  height: 8px;
+
+  background: #171717;
+
+  transform: rotate(45deg);
+}
+
+
+/* Show tooltip */
+
+.tool-button:hover .tool-tooltip {
+  opacity: 1;
+
+  transform: translateX(0);
+}
+
+
+/* =========================================
+   KEYBOARD SHORTCUT
+========================================= */
+
+.tool-tooltip kbd {
+  padding: 2px 5px;
+
+  border-radius: 4px;
+
+  background: rgba(255, 255, 255, 0.12);
+
+  color: #ddd;
+
+  font-size: 10px;
+
+  font-family: monospace;
+}
+
+
+/* =========================================
+   SPACER
+========================================= */
+
+.toolbar-spacer {
+  flex: 1;
+  min-height: 10px;
+}
+
+
+/* =========================================
+   BOTTOM BUTTON
+========================================= */
+
+.toolbar-bottom-button {
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+
+  border-radius: 11px;
+
+  background: #f6f6f6;
+
+  color: #777;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+.toolbar-bottom-button:hover {
+  background: #ececec;
+
+  color: #333;
+
+  transform: scale(1.05);
+}
+
+
+/* =========================================
+   HIDE DEFAULT EXCALIDRAW TOOLBAR
+========================================= */
+
+.excalidraw .App-toolbar {
+  display: none !important;
+}
+
+
+/* =========================================
+   HIDE DEFAULT TOP LEFT UI
+========================================= */
+
+.excalidraw .App-menu_top {
+  display: none !important;
+}
+
+.custom-toolbar {
+  transition:
+    box-shadow 0.3s ease,
+    transform 0.3s cubic-bezier(.2,.8,.2,1);
+}
+
+
+.custom-toolbar:has(.tool-button:hover) {
+  box-shadow:
+    0 15px 45px rgba(0, 0, 0, 0.10),
+    0 3px 12px rgba(0, 0, 0, 0.05);
+}
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 700px) {
+  .custom-toolbar {
+    left: 8px;
+
+    width: 48px;
+
+    padding: 7px 5px;
+
+    border-radius: 15px;
+  }
+
+  .tool-button {
+    width: 34px;
+    height: 34px;
+  }
+
+  .toolbar-brand {
+    width: 32px;
+    height: 32px;
+  }
+
+  .toolbar-bottom-button {
+    width: 34px;
+    height: 34px;
+  }
+
+  .tool-tooltip {
+    display: none;
+  }
+}
+
