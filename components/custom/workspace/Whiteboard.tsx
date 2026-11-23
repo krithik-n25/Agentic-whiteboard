@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { Excalidraw } from "@excalidraw/excalidraw";
+import { Excalidraw, exportToBlob } from "@excalidraw/excalidraw";
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 import "@excalidraw/excalidraw/index.css";
 import axios from "axios";
@@ -90,16 +90,57 @@ function Whiteboard({ onApiReady, isLoaded = true }: Props) {
     }, 10000);
   };
 
+  /**
+   * Small low quality JPEG of the canvas for the dashboard card.
+   * Max 400px on the long side (the card crops it to 16:9), quality 50%.
+   */
+  const GeneratePreviewBase64 = async (
+    elements: readonly any[],
+    appState: any,
+    files: any
+  ): Promise<string | null> => {
+    const visibleElements = elements.filter((el) => !el.isDeleted);
+    if (visibleElements.length === 0) return null;
+
+    const blob = await exportToBlob({
+      elements: visibleElements,
+      appState: { ...appState, exportBackground: true },
+      files,
+      maxWidthOrHeight: 400,
+      mimeType: "image/jpeg", // PNG ignores quality
+      quality: 0.5,
+    });
+
+    return BlobToBase64(blob);
+  };
+
+  const BlobToBase64 = (blob: Blob): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+
   const SaveCanvasData = async (
     elements: readonly any[],
     appState: any,
     files: any
   ) => {
+    // A missing preview should never stop the canvas from saving
+    let previewImage: string | null = null;
+    try {
+      previewImage = await GeneratePreviewBase64(elements, appState, files);
+    } catch (error) {
+      console.error("Failed to generate preview", error);
+    }
+
     try {
       await axios.post("/api/whiteboard", {
         elements,
         appState,
         files,
+        previewImage,
         projectId: projectid,
       });
 

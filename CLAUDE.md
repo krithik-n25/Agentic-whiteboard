@@ -39,11 +39,12 @@ Video ke chapters jo done hain:
 10. 03:45:12 AI Features (Diagrams) + 04:50:00 AI Extras (Claude ne banaya, user ne test karke commit kiya)
 11. 04:39:23 Export as Image
 12. 04:51:54 Fetch Whiteboard Data
+13. 05:06:47 Display Project List (Archive page bhi bana, jo tutorial ka homework tha)
 
 Codebase mein jo bana hua hai (code se verify kiya hua):
 - Next.js setup, Clerk auth, Drizzle DB with users, Projects, WhiteBoardContent schemas
 - Dashboard layout (sidebar, header, welcome banner)
-- Dashboard page with project list aur empty state
+- Dashboard page with project list aur empty state (list ki details neeche Display Project List mein)
 - Create New Workspace dialog with API route
 - Workspace page with WhiteBoard/Docs tab switching. Whiteboard `next/dynamic` se `ssr: false` ke saath load hota hai (Excalidraw import pe `window` use karta hai).
 - Whiteboard with Excalidraw aur custom toolbar (CSS, tool buttons)
@@ -54,7 +55,17 @@ Codebase mein jo bana hua hai (code se verify kiya hua):
 - Extras: `components/custom/workspace/ExtrasPanel.tsx`, toolbar mein Note, Emoji aur Icons (lucide SVG image ki tarah)
 - Export as Image: workspace header mein Export button. Whiteboard `onApiReady` prop se Excalidraw API page ko deta hai (unmount pe null). Page `exportToBlob` se PNG download karta hai, AI placeholder filter hota hai. Docs tab pe button disabled.
 - Fetch Whiteboard Data: `GET /api/projects?projectId=` pehle ownership check karta hai (projectId + user email, warna 404), phir projectName, elements, appState, files deta hai (naye project pe khaali). Page data `restoreElements`/`restoreAppState` se `updateScene` + `addFiles` karta hai (undo history mein nahi). `appState.collaborators` load se pehle hataya jaata hai, kyunki JSON mein wo `{}` save hota hai aur Excalidraw crash karta hai. Load hone tak autosave band (`isLoaded` prop). Header mein asli project naam.
-- Docs tab pe Whiteboard unmount nahi hota, sirf `hidden` hota hai (unsaved changes aur API bachi rehti hai). Wapas aane pe `api.refresh()`.
+- Docs tab pe Whiteboard unmount nahi hota, sirf `hidden` hota hai (unsaved changes aur API bachi rehti hai). Wapas aane pe `api.refresh()`. (`Whiteboard.tsx` mein ek purana comment abhi bhi "unmounts" bolta hai, code sahi hai.)
+- Display Project List:
+  - Schema: `WhiteBoardContent.previewImage` (`preview_image`, text, nullable) aur `Projects.isDeleted` (`is_deleted`, boolean, default false). DB push ho chuka hai.
+  - Preview: har autosave pe `Whiteboard.tsx` `exportToBlob` se JPEG banata hai (`maxWidthOrHeight: 400`, quality 0.5), base64 data URL `/api/whiteboard` ko jaata hai. Khaali canvas pe null. Preview fail ho to bhi canvas save hota hai.
+  - `GET /api/projects` bina `projectId`: user ke non-archived projects, `WhiteBoardContent` ke saath leftJoin. "Edited" time = whiteboard ka `updatedAt`, warna project ka `createdAt` (`.mapWith` se, timezone sahi rehta hai). Naye se purane order.
+  - `GET /api/projects?archived=true` archived list deta hai.
+  - `PATCH /api/projects` body `{ projectId, archived: true/false }` = archive ya restore. `DELETE /api/projects` = hamesha ke liye delete (pehle whiteboard row, phir project, `db.batch` mein). Dono mein ownership check (projectId + email, warna 404).
+  - `ProjectList.tsx`: loading skeleton, "Your Boards" grid (2/3/4 column), card pe preview (plain `<img>`, na ho to icon), naam, `date-fns` se "Edited ... ago". Card click se `router.push` workspace.
+  - Card pe Archive button (bina dialog, seedha archive, toast, hover pe light blue) aur Trash button (confirm dialog, phir permanent delete, toast).
+  - Archive page `app/dashboard/archive/page.tsx` = `<ProjectList archived />`. Wahan Archive ki jagah Restore button (bina dialog, toast) aur Trash (permanent delete). Khaali ho to "No archived boards".
+  - Sidebar: "All File" `/dashboard` aur "Archived" `/dashboard/archive` ke links (`render={<Link />}`). "All File" sirf exact `/dashboard` pe highlight. Shared, AI-Assistents, Settings abhi kahin nahi jaate.
 
 Abhi adhuri / known cheezein:
 - Docs tab (`SmartDocx.tsx`) sirf placeholder hai, koi content nahi. Kisi pending chapter mein nahi hai.
@@ -62,11 +73,11 @@ Abhi adhuri / known cheezein:
 - `/api/whiteboard` project ownership check nahi karta.
 - Login se pehle `POST /api/user` 404 deta hai (purana code).
 - `testCase_img/` local AI test screenshots hain, .gitignore mein hai.
+- Archive kiya hua board seedhe link se (ya Archive page pe card click se) ab bhi khul jaata hai.
 
 ## Pending chapters, is order mein
 | Order | Transcript file | Video chapter | Start |
 |---|---|---|---|
-| 4 | 05-display-project-list.md | Display Project List | 5:06:47 |
 | 5 | 06-credits-update.md | Credits Update | 5:39:02 |
 | 6 | 01-floating-element-properties.md | Floating Element Properties | 3:09:52 |
 

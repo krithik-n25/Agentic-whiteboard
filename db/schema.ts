@@ -1,4 +1,4 @@
-import { integer, jsonb, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { boolean, integer, jsonb, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -14,6 +14,8 @@ export const Projects= pgTable("Projects",{
   projectId:varchar('project_id',).notNull().unique(),
  userEmail: varchar("email").notNull(),
  projectName:varchar('project_name',).notNull(),
+  // Soft delete: archived projects stay in the DB but are hidden from the dashboard
+  isDeleted:boolean('is_deleted').default(false).notNull(),
   createdAt:timestamp("created_at").defaultNow().notNull(),
   updatedAt:timestamp("updated_at").defaultNow().notNull(),
 })
@@ -24,6 +26,8 @@ export const WhiteBoardContent= pgTable("WhiteBoardContent",{
   elements:jsonb('elements').notNull(),
   appState:jsonb('appState').notNull(),
   files:jsonb('files').notNull(),
+  // Small low quality JPEG (base64 data URL) shown on the dashboard card
+  previewImage:text('preview_image'),
   createdAt:timestamp("created_at").defaultNow().notNull(),
   updatedAt:timestamp("updated_at").defaultNow().notNull(),
   
