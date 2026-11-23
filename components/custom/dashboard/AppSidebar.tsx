@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import Link from "next/link";
 import { Archive, FileIcon, LayoutGrid, Settings, Sparkle, UserRound } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { Progress } from "@/components/ui/progress";
@@ -49,7 +50,8 @@ export function AppSidebar() {
         </SidebarGroup>
         <SidebarGroup>
           <SidebarGroupLabel>My Board</SidebarGroupLabel>
-          <SidebarMenuButton className="p-5 text-md font-semibold" isActive={path.includes('dashboard')}>
+          {/* Exact match, so "All File" is not highlighted on /dashboard/archive */}
+          <SidebarMenuButton className="p-5 text-md font-semibold" isActive={path === '/dashboard'} render={<Link href="/dashboard" />}>
             <LayoutGrid/>
             <span>All File</span>
           </SidebarMenuButton>
@@ -57,7 +59,7 @@ export function AppSidebar() {
             <UserRound/>
             <span>Shared</span>
           </SidebarMenuButton>
-          <SidebarMenuButton className="p-5 text-md mt-2 font-semibold" isActive={path.includes('dashboard/archive')}>
+          <SidebarMenuButton className="p-5 text-md mt-2 font-semibold" isActive={path.includes('dashboard/archive')} render={<Link href="/dashboard/archive" />}>
             <Archive/>
             <span>Archived</span>
           </SidebarMenuButton>

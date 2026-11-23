@@ -4,7 +4,7 @@ import {currentUser } from "@clerk/nextjs/server";
 import {db, WhiteBoardContent} from "@/db"
 
 export async function POST(request:NextRequest){
-  const {projectId,elements, files, appState } = await request.json();
+  const {projectId,elements, files, appState, previewImage } = await request.json();
   const user = await currentUser()
   
   if(!user){
@@ -16,13 +16,15 @@ export async function POST(request:NextRequest){
       projectId:projectId,
       elements:elements,
       files:files,
-      appState:appState
+      appState:appState,
+      previewImage:previewImage ?? null
     }).onConflictDoUpdate({
       target:WhiteBoardContent.projectId,
       set:{
         elements:elements,
         files:files,
         appState:appState,
+        previewImage:previewImage ?? null,
         updatedAt:new Date()
       }
     });
