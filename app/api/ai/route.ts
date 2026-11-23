@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { GoogleGenAI, ApiError } from "@google/genai";
 import { getAITool } from "@/lib/aiTools";
+import { refundAICredit, spendAICredit } from "@/lib/credits";
 
 const CANVAS_RULES = `
 CANVAS RULES (Excalidraw):
@@ -232,6 +233,20 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // 1 credit per generation, taken before calling the AI (refunded below if it fails)
+  const creditsLeft = await spendAICredit(user.id);
+  if (creditsLeft === null) {
+    return NextResponse.json(
+      {
+        message: "Is mahine ke AI credits khatam ho gaye. Agle mahine ki 1 tareekh ko reset honge.",
+        success: false,
+        code: "NO_AI_CREDITS",
+        credits: 0,
+      },
+      { status: 403 }
+    );
+  }
+
   const systemPrompt = `${tool.prompt}\n${CANVAS_RULES}`;
   let lastStatus = 500;
 
@@ -241,7 +256,7 @@ export async function POST(req: NextRequest) {
       const diagramResult = await provider.generate(systemPrompt, userInput.trim());
       console.log(`AI: success with ${provider.name} (${provider.model})`);
 
-      return NextResponse.json({ success: true, diagramResult, provider: provider.name });
+      return NextResponse.json({ success: true, diagramResult, provider: provider.name, credits: creditsLeft });
     } catch (err) {
       lastStatus = err instanceof ProviderError ? err.status : 500;
       console.error(
@@ -255,9 +270,12 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Every provider failed, so the user got nothing: give the credit back
+  const credits = await refundAICredit(user.id);
+
   const status = lastStatus === 429 || lastStatus === 503 ? lastStatus : 500;
   return NextResponse.json(
-    { message: errorMessage(status), success: false },
+    { message: errorMessage(status), success: false, credits },
     { status }
   );
 }

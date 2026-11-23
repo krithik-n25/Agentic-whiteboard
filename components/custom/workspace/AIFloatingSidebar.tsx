@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import axios from "axios";
 import {
   convertToExcalidrawElements,
@@ -12,6 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/toast";
 import { AI_TOOLS } from "@/lib/aiTools";
+import { UserDetailContext } from "@/context/UserDetailContext";
+import { FREE_AI_CREDITS, getNextCreditReset } from "@/lib/plans";
+import { format } from "date-fns";
 
 type Props = {
   excalidrawAPI: any;
@@ -57,6 +60,12 @@ function AIFloatingSidebar({ excalidrawAPI, onClose }: Props) {
   const [selectedTool, setSelectedTool] = useState(AI_TOOLS[0].name);
   const [userInput, setUserInput] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const { userDetails, setUserDetails } = useContext(UserDetailContext);
+  // While user details load, do not block (the server checks credits anyway)
+  const aiCredits = Number(userDetails?.credits ?? 0);
+  const noCredits = !!userDetails && aiCredits <= 0;
+  const resetDate = format(getNextCreditReset(), "d MMM");
 
   /**
    * Find an empty spot on the right of existing elements.
@@ -348,8 +357,14 @@ function AIFloatingSidebar({ excalidrawAPI, onClose }: Props) {
     excalidrawAPI.scrollToContent(newElements, { fitToContent: true });
   };
 
+  // Keep the sidebar counter in sync with what the server says
+  const updateCredits = (credits: unknown) => {
+    if (typeof credits !== "number") return;
+    setUserDetails((prev: any) => (prev ? { ...prev, credits } : prev));
+  };
+
   const onClickGenerate = async () => {
-    if (!excalidrawAPI || !userInput.trim() || loading) return;
+    if (!excalidrawAPI || !userInput.trim() || loading || noCredits) return;
 
     setLoading(true);
     const position = getEmptyCanvasPosition();
@@ -363,6 +378,7 @@ function AIFloatingSidebar({ excalidrawAPI, onClose }: Props) {
 
       removeAIPlaceholder();
       renderAIDiagram(result.data.diagramResult, position);
+      updateCredits(result.data.credits);
 
       toast.add({ title: "Diagram generated", type: "success" });
       setUserInput("");
@@ -371,9 +387,12 @@ function AIFloatingSidebar({ excalidrawAPI, onClose }: Props) {
       removeAIPlaceholder();
 
       const status = error?.response?.status;
+      updateCredits(error?.response?.data?.credits);
       toast.add({
         title:
-          status === 429
+          status === 403
+            ? "AI credits finished"
+            : status === 429
             ? "AI limit reached"
             : status === 503
               ? "AI busy"
@@ -450,7 +469,7 @@ function AIFloatingSidebar({ excalidrawAPI, onClose }: Props) {
         />
         <Button
           onClick={onClickGenerate}
-          disabled={loading || !userInput.trim()}
+          disabled={loading || !userInput.trim() || noCredits}
           className="flex items-center gap-2"
         >
           {loading ? (
@@ -460,6 +479,15 @@ function AIFloatingSidebar({ excalidrawAPI, onClose }: Props) {
           )}
           {loading ? "Generating..." : "Generate"}
         </Button>
+        {noCredits ? (
+          <p className="text-xs text-red-500">
+            AI credits finished for this month. They reset on {resetDate}.
+          </p>
+        ) : userDetails ? (
+          <p className="text-xs text-gray-400">
+            {aiCredits} / {FREE_AI_CREDITS} AI credits left · 1 credit per generation
+          </p>
+        ) : null}
       </div>
     </div>
   );

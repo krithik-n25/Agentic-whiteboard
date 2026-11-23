@@ -1,11 +1,15 @@
 import { boolean, integer, jsonb, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { FREE_AI_CREDITS } from "../lib/plans";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   clerkId: text("clerk_id").notNull().unique(),
   name: text("name"),
   email: text("email"),
-  credits: integer('credits').default(3),
+  // Monthly AI credits (1 per AI generation), see lib/plans.ts
+  credits: integer('credits').default(FREE_AI_CREDITS),
+  // When credits were last refilled. null = never, so the first check refills them.
+  creditsResetAt: timestamp("credits_reset_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

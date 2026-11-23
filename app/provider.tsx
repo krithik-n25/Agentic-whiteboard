@@ -25,7 +25,8 @@ function Provider({ children }: { children: React.ReactNode }) {
       enableSystem
       disableTransitionOnChange
     >
-      <UserDetailContext.Provider value={userDetails}>
+      {/* setUserDetails is shared so credits / board count update without a refresh */}
+      <UserDetailContext.Provider value={{ userDetails, setUserDetails }}>
         <div>{children}</div>
       </UserDetailContext.Provider>
     </ThemeProvider>

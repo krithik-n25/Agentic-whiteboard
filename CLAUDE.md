@@ -40,6 +40,7 @@ Video ke chapters jo done hain:
 11. 04:39:23 Export as Image
 12. 04:51:54 Fetch Whiteboard Data
 13. 05:06:47 Display Project List (Archive page bhi bana, jo tutorial ka homework tha)
+14. 05:39:02 Credits Update (apna tareeka: sirf monthly AI credits, board ki koi limit nahi)
 
 Codebase mein jo bana hua hai (code se verify kiya hua):
 - Next.js setup, Clerk auth, Drizzle DB with users, Projects, WhiteBoardContent schemas
@@ -66,6 +67,15 @@ Codebase mein jo bana hua hai (code se verify kiya hua):
   - Card pe Archive button (bina dialog, seedha archive, toast, hover pe light blue) aur Trash button (confirm dialog, phir permanent delete, toast).
   - Archive page `app/dashboard/archive/page.tsx` = `<ProjectList archived />`. Wahan Archive ki jagah Restore button (bina dialog, toast) aur Trash (permanent delete). Khaali ho to "No archived boards".
   - Sidebar: "All File" `/dashboard` aur "Archived" `/dashboard/archive` ke links (`render={<Link />}`). "All File" sirf exact `/dashboard` pe highlight. Shared, AI-Assistents, Settings abhi kahin nahi jaate.
+- Credits Update (video se alag, user ka faisla):
+  - Boards ki koi limit nahi. Limit sirf AI ki: `lib/plans.ts` mein `FREE_AI_CREDITS = 10` har mahine, har mahine ki 1 tareekh (UTC) ko refill. Limit badalni ho to sirf yahi file.
+  - Schema: `users.credits` = AI credits (default `FREE_AI_CREDITS`), `users.credits_reset_at` (null matlab agle check pe refill). DB push ho chuka hai.
+  - `lib/credits.ts` (server): `spendAICredit` ek hi UPDATE query mein naye mahine ka refill + check + 1 minus karta hai (credits minus mein nahi jaate), `refundAICredit` (AI fail pe +1), `refillCreditsIfNewMonth`.
+  - `POST /api/ai`: AI call se pehle 1 credit kat-ta hai. 0 ho to 403 (`NO_AI_CREDITS`), AI call nahi hoti. Saare providers fail hon to refund. Har response mein bache `credits`.
+  - `POST /api/user`: pehle refill check, phir user row deta hai.
+  - Context ab `{ userDetails, setUserDetails }` deta hai (`app/provider.tsx`).
+  - Sidebar mein "AI credits left X / 10" progress bar aur "Resets on 1 ...". AI sidebar mein credits dikhte hain. 0 pe Generate disabled, laal reason, aur 403 pe "AI credits finished" toast. Generate ke baad credits bina refresh update.
+- `docs/TESTING.md`: user ki personal testing guide (app chalana, checklist, Studio/SQL se credits reset). `.gitignore` mein hai, commit nahi hoti.
 
 Abhi adhuri / known cheezein:
 - Docs tab (`SmartDocx.tsx`) sirf placeholder hai, koi content nahi. Kisi pending chapter mein nahi hai.
@@ -78,7 +88,6 @@ Abhi adhuri / known cheezein:
 ## Pending chapters, is order mein
 | Order | Transcript file | Video chapter | Start |
 |---|---|---|---|
-| 5 | 06-credits-update.md | Credits Update | 5:39:02 |
 | 6 | 01-floating-element-properties.md | Floating Element Properties | 3:09:52 |
 
 Dependency Claude ko code dekh ke confirm karni hai. Agar kisi chapter ko order se pehle chahiye ho to batao.
@@ -99,12 +108,12 @@ Agar diagram ka layout kharab aaye (boxes overlap ho rahe hon): model se sirf Me
 - Export as Image: Excalidraw ka default top menu CSS se hide karna, workspace header mein Export button, API ready callback parent ko dena, PNG blob download.
 - Fetch Whiteboard Data: GET endpoint project ID ke saath. Check karo ki project usi user ka hai (user email se). Page pe data fetch karke canvas update karna aur header mein project ka naam dikhana.
 - Display Project List: preview image base64 mein, chhoti size aur kam quality (400 x 225, quality lagbhag 50%). whiteboard_data mein naya preview_image column. Projects mein is_deleted column (default false) soft delete ke liye. Dashboard pe grid of cards, date ke liye moment. Archive page tutorial ne homework chhoda hai.
-- Credits Update: POST /api/projects mein pehle credits check, phir create hone pe ek credit minus. Sidebar mein credits user detail context se. Video mein ek bug tha: credits ka check number mein convert karke karo (Number(credits) <= 0). Insufficient credits pe dialog mein loading band karo aur navigate mat karo.
+- Credits Update: (done, video se alag) credits board banane pe nahi, AI generation pe katte hain. Details Status mein.
 - Floating Element Properties: selected element state, floating position calculation, property change handlers, delete, duplicate, bring to front aur send to back (filter se, find se nahi), lock.
 
 ## Database
 - Jab schema badle (naya column ya table), Drizzle ka push script chalao. Video mein npm run db push aur npm run db studio use hua tha. package.json mein actual script naam dekho.
-- Credits aur Display Project List chapters mein schema badlega. Un chapters se pehle mujhse git commit karwao.
+- Jis bhi chapter mein schema badle, usse pehle mujhse git commit karwao.
 
 ## Workflow
 1. Naya session: is file ko padho, Status verify karo.

@@ -17,6 +17,11 @@ import { usePathname } from "next/navigation";
 import { Progress } from "@/components/ui/progress";
 import { useUser } from "@clerk/nextjs";
 import CreatenewBoardDialog from "./CreatenewBoardDialog";
+import { useContext } from "react";
+import { UserDetailContext } from "@/context/UserDetailContext";
+import { Skeleton } from "@/components/ui/skeleton";
+import { FREE_AI_CREDITS, getNextCreditReset } from "@/lib/plans";
+import { format } from "date-fns";
 
 
 
@@ -24,6 +29,10 @@ export function AppSidebar() {
   
   const path=usePathname();
   const {user}=useUser();
+  const { userDetails } = useContext(UserDetailContext);
+
+  // Number() because the value comes from JSON
+  const aiCredits = Number(userDetails?.credits ?? 0);
 
   return (
     <Sidebar>
@@ -79,8 +88,21 @@ export function AppSidebar() {
       <SidebarFooter>
         <CreatenewBoardDialog/>
           <div className="p-4 my-3 border rounded-md">
-             <h2 className="text-sm flex justify-between mb-1">2 file created<span>total 3</span></h2>
-             <Progress value={62} className="h-2 mt-3"/>
+            {!userDetails ? (
+              <Skeleton className="h-12 w-full" />
+            ) : (
+              <>
+                <div>
+                  <h2 className="text-sm flex justify-between">
+                    AI credits left<span>{aiCredits} / {FREE_AI_CREDITS}</span>
+                  </h2>
+                  <Progress value={(aiCredits / FREE_AI_CREDITS) * 100} className="h-2 mt-2"/>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Resets on {format(getNextCreditReset(), "d MMM")}
+                  </p>
+                </div>
+              </>
+            )}
           </div>
          <div className="flex items-center gap-2 p-4 border rounded-xl">
             {user?.imageUrl && <Image src={user.imageUrl} alt="upgrade" width={40} height={40} className="rounded-full"/>}
