@@ -5,6 +5,7 @@ import {
   Excalidraw,
   exportToBlob,
   getCommonBounds,
+  getSceneVersion,
   sceneCoordsToViewportCoords,
 } from "@excalidraw/excalidraw";
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
@@ -36,14 +37,20 @@ import FloatingProperties, { type FloatingAnchor } from "./FloatingProperties";
 
 const PLACEHOLDER_IDS = Object.values(AI_PLACEHOLDER_IDS);
 
+export type SaveStatus = "saved" | "unsaved" | "saving" | "error";
+
 type Props = {
   // Gives the Excalidraw API to the parent (used for Export). null on unmount.
   onApiReady?: (api: ExcalidrawImperativeAPI | null) => void;
   // false until saved data is loaded, so the empty canvas never overwrites the DB
   isLoaded?: boolean;
+  // Gives the parent a "save right now" function (header Save button, Ctrl+S). null on unmount.
+  onSaveReady?: (saveNow: (() => Promise<boolean>) | null) => void;
+  // Saved / unsaved / saving / error, for the header
+  onSaveStatus?: (status: SaveStatus) => void;
 };
 
-function Whiteboard({ onApiReady, isLoaded = true }: Props) {
+function Whiteboard({ onApiReady, isLoaded = true, onSaveReady, onSaveStatus }: Props) {
   const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null);
   const [activeTool, setActiveTool] = useState("selection");
   const [showAISidebar, setShowAISidebar] = useState(false);
@@ -58,16 +65,33 @@ function Whiteboard({ onApiReady, isLoaded = true }: Props) {
   const selectionKeyRef = useRef("");
 
   const saveTimerRef = useRef<any>(null);
+  // Scene version (sum of element versions) last written to the DB.
+  // Scroll / zoom / selection do not change it, so they do not count as "unsaved".
+  const savedVersionRef = useRef<number | null>(null);
   const { projectid } = useParams();
 
-  // Keep the latest callback in a ref so the unmount cleanup below runs only once
+  // Keep the latest callbacks in refs so the effects below run only once
   const onApiReadyRef = useRef(onApiReady);
   onApiReadyRef.current = onApiReady;
+  const onSaveStatusRef = useRef(onSaveStatus);
+  onSaveStatusRef.current = onSaveStatus;
+  const saveNowRef = useRef<() => Promise<boolean>>(async () => false);
 
-  // Switching to the Docs tab unmounts the whiteboard, so the old API is no longer valid
+  // On unmount the API and the save function are no longer valid
   useEffect(() => {
-    return () => onApiReadyRef.current?.(null);
+    onSaveReady?.(() => saveNowRef.current());
+    return () => {
+      onApiReadyRef.current?.(null);
+      onSaveReady?.(null);
+    };
   }, []);
+
+  // Once the saved board is on the canvas, that is the "saved" state
+  useEffect(() => {
+    if (!isLoaded || !excalidrawAPI) return;
+    savedVersionRef.current = getSceneVersion(excalidrawAPI.getSceneElementsIncludingDeleted());
+    onSaveStatusRef.current?.("saved");
+  }, [isLoaded, excalidrawAPI]);
 
   /**
    * Activate an Excalidraw tool
@@ -82,9 +106,6 @@ function Whiteboard({ onApiReady, isLoaded = true }: Props) {
     setActiveTool(tool);
   };
 
-  /**
-   * Save canvas
-   */
   /**
    * Lock the active tool: after drawing a shape, stay on that tool
    * instead of going back to Select.
@@ -184,9 +205,34 @@ function Whiteboard({ onApiReady, isLoaded = true }: Props) {
       (el) => !PLACEHOLDER_IDS.includes(el.id)
     );
 
+    // Only element changes count as unsaved (not scroll / zoom / selection)
+    if (getSceneVersion(elementsToSave) !== savedVersionRef.current) {
+      onSaveStatusRef.current?.("unsaved");
+    }
+
     saveTimerRef.current = setTimeout(() => {
+      saveTimerRef.current = null;
       SaveCanvasData(elementsToSave, appState, files);
     }, 10000);
+  };
+
+  /**
+   * Save right now (header Save button / Ctrl+S) instead of waiting for autosave.
+   * Kept in a ref so the parent always calls the latest version.
+   */
+  saveNowRef.current = async () => {
+    if (!excalidrawAPI || !isLoaded) return false;
+
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+    }
+
+    const elements = excalidrawAPI
+      .getSceneElementsIncludingDeleted()
+      .filter((el: any) => !PLACEHOLDER_IDS.includes(el.id));
+
+    return SaveCanvasData(elements, excalidrawAPI.getAppState(), excalidrawAPI.getFiles());
   };
 
   /**
@@ -225,7 +271,10 @@ function Whiteboard({ onApiReady, isLoaded = true }: Props) {
     elements: readonly any[],
     appState: any,
     files: any
-  ) => {
+  ): Promise<boolean> => {
+    const version = getSceneVersion(elements as any);
+    onSaveStatusRef.current?.("saving");
+
     // A missing preview should never stop the canvas from saving
     let previewImage: string | null = null;
     try {
@@ -244,8 +293,22 @@ function Whiteboard({ onApiReady, isLoaded = true }: Props) {
       });
 
       console.log("Canvas saved");
+      savedVersionRef.current = version;
+
+      // Something may have changed while the request was running
+      const current = excalidrawAPI
+        ? getSceneVersion(
+            excalidrawAPI
+              .getSceneElementsIncludingDeleted()
+              .filter((el: any) => !PLACEHOLDER_IDS.includes(el.id))
+          )
+        : version;
+      onSaveStatusRef.current?.(current === version ? "saved" : "unsaved");
+      return true;
     } catch (error) {
       console.error("Failed to save canvas", error);
+      onSaveStatusRef.current?.("error");
+      return false;
     }
   };
 

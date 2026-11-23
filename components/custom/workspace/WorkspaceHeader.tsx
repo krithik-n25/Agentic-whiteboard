@@ -3,7 +3,7 @@ import Image from 'next/image'
 import React from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from '@/components/ui/button'
-import { Download, Save, Share } from 'lucide-react'
+import { Check, CircleAlert, Download, Loader2, Save, Share } from 'lucide-react'
 
 type Props={
     selectedTab:any;
@@ -11,8 +11,19 @@ type Props={
     onExport:()=>void;
     canExport:boolean;
     projectName:string;
+    onSave:()=>void;
+    saveStatus:"saved"|"unsaved"|"saving"|"error";
+    canSave:boolean;
 }
-function WorkspaceHeader({selectedTab,activeTab,onExport,canExport,projectName}:Props) {
+
+// Small text next to the Save button
+const STATUS_TEXT = {
+    saved: "All changes saved",
+    unsaved: "Unsaved changes",
+    saving: "Saving...",
+    error: "Save failed",
+}
+function WorkspaceHeader({selectedTab,activeTab,onExport,canExport,projectName,onSave,saveStatus,canSave}:Props) {
     return (
         <div className='p-3 border-b flex items-center justify-between'>
             <div className='flex gap-2 items-center'>
@@ -31,9 +42,18 @@ function WorkspaceHeader({selectedTab,activeTab,onExport,canExport,projectName}:
 
             </div>
             {/* Extra swtich */}
-            <div className='gap-2 flex'>
+            <div className='gap-2 flex items-center'>
+                {canSave && (
+                    <span className={`hidden md:flex items-center gap-1 text-xs ${saveStatus === 'error' ? 'text-red-500' : 'text-muted-foreground'}`}>
+                        {saveStatus === 'saved' && <Check className='h-3.5 w-3.5'/>}
+                        {saveStatus === 'error' && <CircleAlert className='h-3.5 w-3.5'/>}
+                        {STATUS_TEXT[saveStatus]}
+                    </span>
+                )}
                 <Button variant={'outline'} onClick={onExport} disabled={!canExport}><Download/> Export</Button>
-                <Button><Save/> Save</Button> 
+                <Button onClick={onSave} disabled={!canSave || saveStatus === 'saving'} title='Save now (Ctrl+S)'>
+                    {saveStatus === 'saving' ? <Loader2 className='animate-spin'/> : <Save/>} Save
+                </Button> 
                 <Button variant={'outline'}><Share/> Share</Button>
             </div>
         </div>

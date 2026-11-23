@@ -6,6 +6,7 @@ import axios from 'axios';
 import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
 import WorkspaceHeader from '@/components/custom/workspace/WorkspaceHeader'
 import CodeFlow from '@/components/custom/workspace/CodeFlow';
+import type { SaveStatus } from '@/components/custom/workspace/Whiteboard';
 import { toast } from '@/components/ui/toast';
 
 // Excalidraw uses `window` on import, so render the whiteboard only in the browser
@@ -22,6 +23,42 @@ function workspace() {
   const { projectid } = useParams();
   // Flowchart from the Code tab to zoom to once the whiteboard is visible again
   const pendingFocusRef = useRef<any[] | null>(null);
+
+  // Save button / Ctrl+S: the Whiteboard hands us its "save now" function
+  const saveNowRef = useRef<(() => Promise<boolean>) | null>(null);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("saved");
+
+  const handleSave = async () => {
+    if (!saveNowRef.current || !isLoaded || saveStatus === "saving") return;
+    const ok = await saveNowRef.current();
+    toast.add(ok
+      ? { title: "Saved", type: "success" }
+      : { title: "Save failed", description: "Check your internet and try again.", type: "error" });
+  };
+
+  // Ctrl+S / Cmd+S saves the board. Capture phase on window, so it runs before
+  // Excalidraw (which would otherwise try to download a .excalidraw file).
+  const handleSaveRef = useRef(handleSave);
+  handleSaveRef.current = handleSave;
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        e.stopPropagation();
+        handleSaveRef.current();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, []);
+
+  // Closing the tab with unsaved changes: let the browser ask first
+  useEffect(() => {
+    if (saveStatus !== 'unsaved' && saveStatus !== 'saving' && saveStatus !== 'error') return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [saveStatus]);
 
   // Load the saved whiteboard once Excalidraw is ready
   useEffect(() => {
@@ -125,6 +162,9 @@ function workspace() {
       <WorkspaceHeader
         selectedTab={(value: string) => setActiveTab(value)}
         activeTab={activeTab}
+        onSave={handleSave}
+        saveStatus={saveStatus}
+        canSave={isLoaded}
         onExport={handleExportImage}
         canExport={activeTab == 'WhiteBoard' && !!excalidrawAPI}
         projectName={projectName}
@@ -132,7 +172,12 @@ function workspace() {
 
       {/* Hidden instead of unmounted, so unsaved changes and the API survive a tab switch */}
       <div className={activeTab == 'WhiteBoard' ? '' : 'hidden'}>
-        <Whiteboard onApiReady={setExcalidrawAPI} isLoaded={isLoaded} />
+        <Whiteboard
+          onApiReady={setExcalidrawAPI}
+          isLoaded={isLoaded}
+          onSaveReady={(fn) => { saveNowRef.current = fn; }}
+          onSaveStatus={setSaveStatus}
+        />
       </div>
       {/* Kept mounted (only hidden) so the pasted code and steps stay when switching tabs */}
       <div className={activeTab == 'Code' ? '' : 'hidden'}>

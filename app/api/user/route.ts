@@ -37,6 +37,7 @@ export async function POST(req:NextRequest) {
             }
         }
     }
-    return NextResponse.json({message:"User not found"},{status:404})
+    // Not signed in: 401 (not 404), the client only calls this after login anyway
+    return NextResponse.json({message:"Unauthorized"},{status:401})
 
 }

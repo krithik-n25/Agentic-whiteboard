@@ -4,18 +4,30 @@ import { UserDetailContext } from "@/context/UserDetailContext";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { ThemeProvider } from "next-themes";
+import { useUser } from "@clerk/nextjs";
 
 function Provider({ children }: { children: React.ReactNode }) {
   const [userDetails, setUserDetails] = useState<any>(null);
+  const { isLoaded, isSignedIn, user } = useUser();
 
+  // Only a signed-in user has a DB row. Before login (landing page) there is
+  // nothing to fetch, and after logout the old details are cleared.
   useEffect(() => {
-    CreateNewUser();
-  }, []);
+    if (!isLoaded) return;
+    if (isSignedIn) {
+      CreateNewUser();
+    } else {
+      setUserDetails(null);
+    }
+  }, [isLoaded, isSignedIn, user?.id]);
 
   const CreateNewUser = async () => {
-    const result = await axios.post("/api/user");
-    console.log(result.data);
-    setUserDetails(result.data);
+    try {
+      const result = await axios.post("/api/user");
+      setUserDetails(result.data);
+    } catch (error) {
+      console.error("Failed to load user details", error);
+    }
   };
 
   return (
