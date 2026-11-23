@@ -106,6 +106,8 @@ Codebase mein jo bana hua hai (code se verify kiya hua):
   - Whiteboard: canvas theme (Excalidraw `theme` prop, "app" = app theme), grid aur naye text ka font (board load pe appState mein), autosave 5/10/30 sec.
   - Account: Clerk profile, `openUserProfile`, `signOut`. AI credits progress.
   - Data: "Delete all archived boards" (`DELETE /api/projects/archived`, `db.batch`), aur settings reset.
+- Front page `/` (`components/custom/landing/LandingPage.tsx`): pehle Next.js boilerplate ka page tha, ab apna. Nav (Sign in / Sign up ya Dashboard), hero, demo, features, CTA. `DemoBoard.tsx` = HTML/SVG ka nakli "video" (koi video file nahi): cursor AI button pe, panel, prompt type, Generate, flowchart khud draw (CSS `demo-*` animations `globals.css` mein, `pathLength=1` se stroke draw). Enter: pehle demo chalta hai, khatam hone pe dobara Enter se `/sign-in` (login ho to `/dashboard`). `prefers-reduced-motion` pe seedha final board.
+- Sign-in / Sign-up pe `fallbackRedirectUrl="/dashboard"` (pehle login ke baad `/` pe aata tha).
 - `/api/whiteboard` ab owner check karta hai (projectId + email, warna 404).
 - `Provider` sirf login hone pe `POST /api/user` call karta hai, logout pe details null. `/api/user` bina login 401 deta hai.
 - `docs/TESTING.md`: user ki personal testing guide (app chalana, checklist, Studio/SQL se credits reset). `.gitignore` mein hai, commit nahi hoti.

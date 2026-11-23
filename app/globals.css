@@ -331,3 +331,93 @@ html[data-font="nunito"] {
 html[data-font="system"] {
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
+
+/* =========================================
+   LANDING PAGE (components/custom/landing)
+========================================= */
+
+/* Hero text slides up on load */
+.landing-up {
+  opacity: 0;
+  animation: landing-up 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+@keyframes landing-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Demo board: dotted canvas */
+.demo-dots {
+  background-image: radial-gradient(rgba(100, 116, 139, 0.25) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+/* Lines draw themselves (SVG elements use pathLength="1") */
+.demo-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: demo-draw 0.55s ease-out forwards;
+}
+@keyframes demo-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+.demo-fill,
+.demo-text,
+.demo-label,
+.demo-fade {
+  opacity: 0;
+  animation: demo-fade 0.4s ease-out forwards;
+}
+@keyframes demo-fade {
+  to { opacity: 1; }
+}
+
+.demo-text {
+  font: 600 17px var(--font-sans);
+  fill: #1e1e1e;
+}
+.demo-label {
+  font: 500 14px var(--font-sans);
+  fill: #475569;
+}
+
+/* AI panel pops in */
+.demo-pop {
+  animation: demo-pop 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-origin: bottom right;
+}
+@keyframes demo-pop {
+  from { opacity: 0; transform: scale(0.92) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Cursor click */
+.demo-ripple {
+  animation: demo-ripple 0.6s ease-out forwards;
+}
+@keyframes demo-ripple {
+  from { transform: scale(0.3); opacity: 1; }
+  to { transform: scale(2.2); opacity: 0; }
+}
+
+.demo-caret {
+  animation: demo-caret 0.8s steps(1) infinite;
+}
+@keyframes demo-caret {
+  50% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-up,
+  .demo-draw,
+  .demo-fill,
+  .demo-text,
+  .demo-label,
+  .demo-fade,
+  .demo-pop {
+    animation: none;
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}
