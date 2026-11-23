@@ -520,3 +520,40 @@
   }
 }
 
+
+
+/* =========================================
+   AI FLOATING BUTTON
+========================================= */
+
+.ai-floating-button {
+  position: absolute;
+  right: 16px;
+  bottom: 64px; /* above Excalidraw's help (?) button */
+  z-index: 50;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 10px 16px;
+  border-radius: 999px;
+
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
+
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ai-floating-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(99, 102, 241, 0.45);
+}
+
+.ai-floating-button.active {
+  background: linear-gradient(135deg, #4f46e5, #9333ea);
+}
