@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Excalidraw } from "@excalidraw/excalidraw";
+import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 import "@excalidraw/excalidraw/index.css";
 import axios from "axios";
 import { useParams } from "next/navigation";
@@ -28,13 +29,27 @@ import ExtrasPanel from "./ExtrasPanel";
 
 const PLACEHOLDER_IDS = Object.values(AI_PLACEHOLDER_IDS);
 
-function Whiteboard() {
+type Props = {
+  // Gives the Excalidraw API to the parent (used for Export). null on unmount.
+  onApiReady?: (api: ExcalidrawImperativeAPI | null) => void;
+};
+
+function Whiteboard({ onApiReady }: Props) {
   const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null);
   const [activeTool, setActiveTool] = useState("selection");
   const [showAISidebar, setShowAISidebar] = useState(false);
 
   const saveTimerRef = useRef<any>(null);
   const { projectid } = useParams();
+
+  // Keep the latest callback in a ref so the unmount cleanup below runs only once
+  const onApiReadyRef = useRef(onApiReady);
+  onApiReadyRef.current = onApiReady;
+
+  // Switching to the Docs tab unmounts the whiteboard, so the old API is no longer valid
+  useEffect(() => {
+    return () => onApiReadyRef.current?.(null);
+  }, []);
 
   /**
    * Activate an Excalidraw tool
@@ -360,7 +375,10 @@ function Whiteboard() {
       <div className="excalidraw-wrapper">
         <Excalidraw
           // @ts-ignore
-          excalidrawAPI={(api) => setExcalidrawAPI(api)}
+          excalidrawAPI={(api) => {
+            setExcalidrawAPI(api);
+            onApiReady?.(api);
+          }}
           onChange={HandleCanvas}
         />
       </div>
