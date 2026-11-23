@@ -93,12 +93,18 @@ Codebase mein jo bana hua hai (code se verify kiya hua):
   - `POST /api/ai/code`: 1 AI credit. Model Mermaid `flowchart TD` + `steps` deta hai. Code nahi hai to 422 + refund. Providers fail hon ya Mermaid na mile to refund.
   - Browser mein `@excalidraw/mermaid-to-excalidraw` (2.2.2) se elements, `regenerateIds: true`, rang: ellipse hara (start/end), rectangle neela, diamond peela. Purani drawing ke right mein. Phir WhiteBoard tab aur `scrollToContent`.
   - Steps pe click se code ki lines select. "Show on whiteboard". Mermaid draw na ho to toast, credit wapas nahi (browser check pe refund nahi diya).
+- Save: header Save button aur `Ctrl+S` (window capture listener, Excalidraw ka file-save rokta hai). Whiteboard `onSaveReady` se `saveNow` deta hai, `onSaveStatus` se saved / unsaved / saving / error. "Unsaved" sirf element version (`getSceneVersion`) badalne pe, scroll/zoom pe nahi. Unsaved pe tab band karne se browser warning.
+- Share (view-only link):
+  - Schema: `Projects.isPublic` (`is_public`, default false). DB push ho chuka hai.
+  - `POST /api/projects/share` `{ projectId, isPublic }` sirf owner. `GET /api/projects?projectId=` ab `isPublic` bhi deta hai.
+  - `GET /api/share?projectId=` public (bina login): sirf `isPublic = true` aur archived nahi, warna 404 (not-found aur not-shared ka ek hi jawab). Sirf naam + scene, email nahi.
+  - `components/custom/workspace/ShareDialog.tsx`: switch, link copy. Public page `app/share/[projectid]/page.tsx` + `components/custom/share/ShareViewer.tsx` (`viewModeEnabled`, Refresh button, last saved version dikhta hai).
+- `/api/whiteboard` ab owner check karta hai (projectId + email, warna 404).
+- `Provider` sirf login hone pe `POST /api/user` call karta hai, logout pe details null. `/api/user` bina login 401 deta hai.
 - `docs/TESTING.md`: user ki personal testing guide (app chalana, checklist, Studio/SQL se credits reset). `.gitignore` mein hai, commit nahi hoti.
 
 Abhi adhuri / known cheezein:
-- Workspace header ka Save aur Share button kuch nahi karta.
-- `/api/whiteboard` project ownership check nahi karta.
-- Login se pehle `POST /api/user` 404 deta hai (purana code).
+- `proxy.ts` sirf `/dashboard` protect karta hai, `/workspace` nahi (page khulta hai, par APIs 401/404 dete hain).
 - `testCase_img/` local AI test screenshots hain, .gitignore mein hai.
 - Archive kiya hua board seedhe link se (ya Archive page pe card click se) ab bhi khul jaata hai.
 

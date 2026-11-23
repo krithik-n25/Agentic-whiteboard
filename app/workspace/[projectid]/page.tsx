@@ -20,6 +20,8 @@ function workspace() {
   const [excalidrawAPI, setExcalidrawAPI] = useState<ExcalidrawImperativeAPI | null>(null);
   const [projectName, setProjectName] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
+  // View-only link on / off (header Share button)
+  const [isPublic, setIsPublic] = useState(false);
   const { projectid } = useParams();
   // Flowchart from the Code tab to zoom to once the whiteboard is visible again
   const pendingFocusRef = useRef<any[] | null>(null);
@@ -71,6 +73,7 @@ function workspace() {
       const result = await axios.get('/api/projects', { params: { projectId: projectid } });
       const { projectName, elements, appState, files } = result.data;
       setProjectName(projectName);
+      setIsPublic(!!result.data.isPublic);
 
       // restore* fills missing fields and cleans elements from the DB
       const { restoreElements, restoreAppState, CaptureUpdateAction } = await import('@excalidraw/excalidraw');
@@ -165,6 +168,9 @@ function workspace() {
         onSave={handleSave}
         saveStatus={saveStatus}
         canSave={isLoaded}
+        projectId={String(projectid)}
+        isPublic={isPublic}
+        onShareChange={setIsPublic}
         onExport={handleExportImage}
         canExport={activeTab == 'WhiteBoard' && !!excalidrawAPI}
         projectName={projectName}

@@ -3,7 +3,8 @@ import Image from 'next/image'
 import React from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from '@/components/ui/button'
-import { Check, CircleAlert, Download, Loader2, Save, Share } from 'lucide-react'
+import { Check, CircleAlert, Download, Loader2, Save } from 'lucide-react'
+import ShareDialog from './ShareDialog'
 
 type Props={
     selectedTab:any;
@@ -14,6 +15,9 @@ type Props={
     onSave:()=>void;
     saveStatus:"saved"|"unsaved"|"saving"|"error";
     canSave:boolean;
+    projectId:string;
+    isPublic:boolean;
+    onShareChange:(isPublic:boolean)=>void;
 }
 
 // Small text next to the Save button
@@ -23,7 +27,7 @@ const STATUS_TEXT = {
     saving: "Saving...",
     error: "Save failed",
 }
-function WorkspaceHeader({selectedTab,activeTab,onExport,canExport,projectName,onSave,saveStatus,canSave}:Props) {
+function WorkspaceHeader({selectedTab,activeTab,onExport,canExport,projectName,onSave,saveStatus,canSave,projectId,isPublic,onShareChange}:Props) {
     return (
         <div className='p-3 border-b flex items-center justify-between'>
             <div className='flex gap-2 items-center'>
@@ -54,7 +58,8 @@ function WorkspaceHeader({selectedTab,activeTab,onExport,canExport,projectName,o
                 <Button onClick={onSave} disabled={!canSave || saveStatus === 'saving'} title='Save now (Ctrl+S)'>
                     {saveStatus === 'saving' ? <Loader2 className='animate-spin'/> : <Save/>} Save
                 </Button> 
-                <Button variant={'outline'}><Share/> Share</Button>
+                {/* Disabled until the project is loaded (and we know if it is shared) */}
+                <ShareDialog projectId={projectId} isPublic={isPublic} onChange={onShareChange} disabled={!canSave} />
             </div>
         </div>
     )

@@ -20,6 +20,8 @@ export const Projects= pgTable("Projects",{
  projectName:varchar('project_name',).notNull(),
   // Soft delete: archived projects stay in the DB but are hidden from the dashboard
   isDeleted:boolean('is_deleted').default(false).notNull(),
+  // Share: anyone with the link can view (read only) when true
+  isPublic:boolean('is_public').default(false).notNull(),
   createdAt:timestamp("created_at").defaultNow().notNull(),
   updatedAt:timestamp("updated_at").defaultNow().notNull(),
 })

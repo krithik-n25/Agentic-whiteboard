@@ -74,6 +74,7 @@ export async function GET(req:NextRequest){
         // A new project has no saved whiteboard yet
         return NextResponse.json({
             projectName: userProject[0].projectName,
+            isPublic: userProject[0].isPublic,
             elements: content[0]?.elements ?? [],
             appState: content[0]?.appState ?? {},
             files: content[0]?.files ?? {},
