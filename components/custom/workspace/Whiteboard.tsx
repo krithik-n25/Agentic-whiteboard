@@ -23,12 +23,17 @@ import {
 } from "lucide-react";
 
 import "./whiteboard.css";
+import AIFloatingSidebar, { AI_PLACEHOLDER_IDS } from "./AIFloatingSidebar";
+import ExtrasPanel from "./ExtrasPanel";
+
+const PLACEHOLDER_IDS = Object.values(AI_PLACEHOLDER_IDS);
 
 function Whiteboard() {
   const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null);
   const [activeTool, setActiveTool] = useState("selection");
+  const [showAISidebar, setShowAISidebar] = useState(false);
 
-  const saveTimerRef = useRef<any>();
+  const saveTimerRef = useRef<any>(null);
   const { projectid } = useParams();
 
   /**
@@ -56,8 +61,13 @@ function Whiteboard() {
       clearTimeout(saveTimerRef.current);
     }
 
+    // Never save the temporary "Generating with AI..." placeholder
+    const elementsToSave = elements.filter(
+      (el) => !PLACEHOLDER_IDS.includes(el.id)
+    );
+
     saveTimerRef.current = setTimeout(() => {
-      SaveCanvasData(elements, appState, files);
+      SaveCanvasData(elementsToSave, appState, files);
     }, 10000);
   };
 
@@ -327,6 +337,11 @@ function Whiteboard() {
           })}
         </div>
 
+        <div className="toolbar-divider" />
+
+        {/* Extras: notes, emoji, icons */}
+        <ExtrasPanel excalidrawAPI={excalidrawAPI} />
+
         <div className="toolbar-spacer" />
 
         {/* Bottom button */}
@@ -349,6 +364,26 @@ function Whiteboard() {
           onChange={HandleCanvas}
         />
       </div>
+
+      {/* =========================
+          AI HELPER
+      ========================== */}
+
+      {showAISidebar && excalidrawAPI && (
+        <AIFloatingSidebar
+          excalidrawAPI={excalidrawAPI}
+          onClose={() => setShowAISidebar(false)}
+        />
+      )}
+
+      <button
+        className={`ai-floating-button ${showAISidebar ? "active" : ""}`}
+        onClick={() => setShowAISidebar(!showAISidebar)}
+        title="AI Helper"
+      >
+        <Sparkles size={18} />
+        AI
+      </button>
 
     </div>
   );

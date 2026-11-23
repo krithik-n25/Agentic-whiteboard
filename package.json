@@ -15,6 +15,7 @@
     "@base-ui/react": "^1.7.0",
     "@clerk/nextjs": "^7.2.3",
     "@excalidraw/excalidraw": "^0.18.1",
+    "@google/genai": "^3.6.1",
     "@neondatabase/serverless": "^1.0.2",
     "@shadcn/react": "^0.3.0",
     "axios": "^1.20.0",
