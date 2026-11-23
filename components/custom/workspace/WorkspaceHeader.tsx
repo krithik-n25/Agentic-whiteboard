@@ -7,11 +7,12 @@ import { Download, Save, Share } from 'lucide-react'
 
 type Props={
     selectedTab:any;
+    activeTab:string; // controlled, so the page can switch tabs (Code -> WhiteBoard)
     onExport:()=>void;
     canExport:boolean;
     projectName:string;
 }
-function WorkspaceHeader({selectedTab,onExport,canExport,projectName}:Props) {
+function WorkspaceHeader({selectedTab,activeTab,onExport,canExport,projectName}:Props) {
     return (
         <div className='p-3 border-b flex items-center justify-between'>
             <div className='flex gap-2 items-center'>
@@ -20,10 +21,10 @@ function WorkspaceHeader({selectedTab,onExport,canExport,projectName}:Props) {
             </div>
             {/* Switch theme */}
             <div >
-                <Tabs defaultValue="WhiteBoard" onValueChange={(value)=>selectedTab(value)}>
+                <Tabs value={activeTab} onValueChange={(value)=>selectedTab(value)}>
                     <TabsList>
                         <TabsTrigger value="WhiteBoard">WhiteBoard</TabsTrigger>
-                        <TabsTrigger value="Docs">Docs</TabsTrigger>
+                        <TabsTrigger value="Code">Code</TabsTrigger>
                     </TabsList>
                     
                 </Tabs>

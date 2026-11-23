@@ -200,7 +200,8 @@ function ExtrasPanel({ excalidrawAPI }: Props) {
   };
 
   return (
-    <div className="toolbar-group">
+    // Dock at the bottom center of the canvas (no longer in the left toolbar)
+    <div className="extras-dock">
       {/* Note */}
       <button
         className="tool-button"
@@ -222,7 +223,7 @@ function ExtrasPanel({ excalidrawAPI }: Props) {
           <Smile size={19} strokeWidth={1.8} />
           <span className="tool-tooltip">Emoji</span>
         </PopoverTrigger>
-        <PopoverContent side="right" sideOffset={12} className="w-80 gap-2">
+        <PopoverContent side="top" sideOffset={12} className="w-80 gap-2">
           <h3 className="text-sm font-medium">Add emoji</h3>
           <div className="grid grid-cols-8 gap-1">
             {EMOJIS.map((emoji) => (
@@ -248,7 +249,7 @@ function ExtrasPanel({ excalidrawAPI }: Props) {
           <Shapes size={19} strokeWidth={1.8} />
           <span className="tool-tooltip">Icons</span>
         </PopoverTrigger>
-        <PopoverContent side="right" sideOffset={12} className="w-80 gap-2">
+        <PopoverContent side="top" sideOffset={12} className="w-80 gap-2">
           <h3 className="text-sm font-medium">Add icon</h3>
           <div className="grid grid-cols-7 gap-1">
             {ICONS.map(({ name, icon: Icon }) => (

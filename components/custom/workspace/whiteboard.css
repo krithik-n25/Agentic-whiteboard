@@ -557,3 +557,195 @@
 .ai-floating-button.active {
   background: linear-gradient(135deg, #4f46e5, #9333ea);
 }
+
+
+/* =========================================
+   FLOATING ELEMENT PROPERTIES
+   (toolbar above the selected element)
+========================================= */
+
+.floating-properties {
+  position: fixed;
+  z-index: 40; /* under popovers (z-50) */
+
+  display: flex;
+  align-items: center;
+  gap: 2px;
+
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
+}
+
+.fp-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.fp-button:hover {
+  background: #eef2ff;
+  color: #4f46e5;
+}
+
+.fp-danger:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.fp-divider {
+  width: 1px;
+  height: 20px;
+  margin: 0 4px;
+  background: #e5e7eb;
+}
+
+.fp-swatch {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+}
+
+.fp-swatch-button {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.fp-swatch-button.active {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+.fp-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fp-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  text-transform: capitalize;
+}
+
+.fp-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.fp-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 32px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+
+  font-size: 12px;
+  text-transform: capitalize;
+  color: #334155;
+  cursor: pointer;
+}
+
+.fp-option:hover {
+  background: #f8fafc;
+}
+
+.fp-option.active {
+  border-color: #6366f1;
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+/* Tool lock is on */
+.toolbar-bottom-button.active {
+  background: #eef2ff;
+  color: #4f46e5;
+}
+
+/* Drag handle of the floating properties toolbar */
+.fp-grip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 16px;
+  height: 32px;
+  border-radius: 6px;
+
+  color: #94a3b8;
+  cursor: grab;
+  touch-action: none; /* let touch drag the bar instead of scrolling */
+}
+
+.fp-grip:hover {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.fp-grip:active {
+  cursor: grabbing;
+}
+
+
+/* =========================================
+   EXTRAS DOCK (bottom center)
+   Note, Emoji, Icons
+========================================= */
+
+.extras-dock {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 30;
+
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  padding: 5px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 10px 35px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.04);
+
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Tooltip above the button instead of to the right */
+.extras-dock .tool-tooltip {
+  left: 50%;
+  bottom: 48px;
+  transform: translate(-50%, 5px);
+}
+
+.extras-dock .tool-tooltip::before {
+  left: 50%;
+  bottom: -4px;
+  margin-left: -4px;
+}
+
+.extras-dock .tool-button:hover .tool-tooltip {
+  transform: translate(-50%, 0);
+}

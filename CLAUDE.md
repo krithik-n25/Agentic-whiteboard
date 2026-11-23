@@ -41,22 +41,25 @@ Video ke chapters jo done hain:
 12. 04:51:54 Fetch Whiteboard Data
 13. 05:06:47 Display Project List (Archive page bhi bana, jo tutorial ka homework tha)
 14. 05:39:02 Credits Update (apna tareeka: sirf monthly AI credits, board ki koi limit nahi)
+15. 03:09:52 Floating Element Properties (saath mein drag, tool lock, aur Docs ki jagah Code tab)
+
+Saare video chapters done hain. Ab jo bhi banega wo apna feature hai.
 
 Codebase mein jo bana hua hai (code se verify kiya hua):
 - Next.js setup, Clerk auth, Drizzle DB with users, Projects, WhiteBoardContent schemas
 - Dashboard layout (sidebar, header, welcome banner)
 - Dashboard page with project list aur empty state (list ki details neeche Display Project List mein)
 - Create New Workspace dialog with API route
-- Workspace page with WhiteBoard/Docs tab switching. Whiteboard `next/dynamic` se `ssr: false` ke saath load hota hai (Excalidraw import pe `window` use karta hai).
+- Workspace page with WhiteBoard/Code tab switching (tabs controlled: page `activeTab` header ko deta hai). Whiteboard `next/dynamic` se `ssr: false` ke saath load hota hai (Excalidraw import pe `window` use karta hai).
 - Whiteboard with Excalidraw aur custom toolbar (CSS, tool buttons)
 - Whiteboard autosave: 10 second debounce ke saath chal raha hai (kabhi comment nahi tha). AI placeholder save nahi hota.
 - Whiteboard API route for saving canvas data
-- AI helper: `components/custom/workspace/AIFloatingSidebar.tsx` (bottom-right AI button, 5 tools, canvas placeholder, diagram render), `lib/aiTools.ts` (tools aur unke prompts, server pe hi use hote hain), `app/api/ai/route.ts`
+- AI helper: `components/custom/workspace/AIFloatingSidebar.tsx` (bottom-right AI button, 5 tools, canvas placeholder, diagram render), `lib/aiTools.ts` (tools aur unke prompts, server pe hi use hote hain), `app/api/ai/route.ts`. Groq/Gemini call aur fallback `lib/aiProviders.ts` mein (schema leta hai, dono AI routes use karte hain).
 - AI diagram ke arrows code se route hote hain (`routeArrow`): seedha, L-shape, ya right side se ghoom ke. Boxes ki position model deta hai, use badla nahi jaata.
-- Extras: `components/custom/workspace/ExtrasPanel.tsx`, toolbar mein Note, Emoji aur Icons (lucide SVG image ki tarah)
-- Export as Image: workspace header mein Export button. Whiteboard `onApiReady` prop se Excalidraw API page ko deta hai (unmount pe null). Page `exportToBlob` se PNG download karta hai, AI placeholder filter hota hai. Docs tab pe button disabled.
+- Extras: `components/custom/workspace/ExtrasPanel.tsx`, canvas ke neeche beech mein dock (`.extras-dock`): Note, Emoji aur Icons (lucide SVG image ki tarah). Popups aur tooltip upar khulte hain. Left toolbar mein ab nahi hai.
+- Export as Image: workspace header mein Export button. Whiteboard `onApiReady` prop se Excalidraw API page ko deta hai (unmount pe null). Page `exportToBlob` se PNG download karta hai, AI placeholder filter hota hai. Code tab pe button disabled.
 - Fetch Whiteboard Data: `GET /api/projects?projectId=` pehle ownership check karta hai (projectId + user email, warna 404), phir projectName, elements, appState, files deta hai (naye project pe khaali). Page data `restoreElements`/`restoreAppState` se `updateScene` + `addFiles` karta hai (undo history mein nahi). `appState.collaborators` load se pehle hataya jaata hai, kyunki JSON mein wo `{}` save hota hai aur Excalidraw crash karta hai. Load hone tak autosave band (`isLoaded` prop). Header mein asli project naam.
-- Docs tab pe Whiteboard unmount nahi hota, sirf `hidden` hota hai (unsaved changes aur API bachi rehti hai). Wapas aane pe `api.refresh()`. (`Whiteboard.tsx` mein ek purana comment abhi bhi "unmounts" bolta hai, code sahi hai.)
+- Code tab pe Whiteboard unmount nahi hota, sirf `hidden` hota hai (unsaved changes aur API bachi rehti hai). Wapas aane pe `api.refresh()`. Code tab bhi hidden hi hota hai, unmount nahi. (`Whiteboard.tsx` mein ek purana comment abhi bhi "unmounts" bolta hai, code sahi hai.)
 - Display Project List:
   - Schema: `WhiteBoardContent.previewImage` (`preview_image`, text, nullable) aur `Projects.isDeleted` (`is_deleted`, boolean, default false). DB push ho chuka hai.
   - Preview: har autosave pe `Whiteboard.tsx` `exportToBlob` se JPEG banata hai (`maxWidthOrHeight: 400`, quality 0.5), base64 data URL `/api/whiteboard` ko jaata hai. Khaali canvas pe null. Preview fail ho to bhi canvas save hota hai.
@@ -75,10 +78,24 @@ Codebase mein jo bana hua hai (code se verify kiya hua):
   - `POST /api/user`: pehle refill check, phir user row deta hai.
   - Context ab `{ userDetails, setUserDetails }` deta hai (`app/provider.tsx`).
   - Sidebar mein "AI credits left X / 10" progress bar aur "Resets on 1 ...". AI sidebar mein credits dikhte hain. 0 pe Generate disabled, laal reason, aur 403 pe "AI credits finished" toast. Generate ke baad credits bina refresh update.
+- Floating Element Properties (`components/custom/workspace/FloatingProperties.tsx`):
+  - `Whiteboard.tsx` ka `onChange` (`TrackSelection`) selected elements aur toolbar ki jagah nikalta hai, state tabhi badalti hai jab selection / version / zoom / scroll badle. Draw, drag, resize, rotate, text edit, AI placeholder pe toolbar chhupta hai. Locked aur shape ke andar ka label selection mein nahi gine jaate.
+  - Position: `getCommonBounds` + `sceneCoordsToViewportCoords`, `position: fixed`, element ke upar beech mein, jagah na ho to neeche, screen ke andar clamp.
+  - Toolbar: stroke color, background (shapes), "⋯" Popover mein type ke hisaab se options (width, style, sloppiness, fill, edges, arrowheads, font, size, align, opacity), phir Duplicate, Front, Back, Lock, Delete. Kai elements ek saath bhi.
+  - Badlav `newElementWith` se, `CaptureUpdateAction.IMMEDIATELY` (undo chalta hai). Font/size/align pe poore scene ka `restoreElements(..., { refreshDimensions: true })` se sirf text ka naya size liya jaata hai (akele text ko restore karne se arrow bindings toot-ti hain).
+  - Color/opacity shape ke label (bound text) pe bhi. Edges: rectangle `ADAPTIVE_RADIUS`, diamond `PROPORTIONAL_RADIUS`.
+  - Delete: label ke saath, arrows ki binding aur shapes ke `boundElements` saaf. Duplicate: naye id/seed, +20px, label bhi, naye group ids, sirf copy hue elements ki binding, copy select hoti hai. Front/back: array order (filter), `syncInvalidIndices` index theek karta hai. Lock ke baad selection hatta hai, unlock right-click > Unlock all.
+  - Grip (⋮⋮) se drag hota hai (pointer capture). Naye selection pe `key` badalta hai to drag offset 0.
+- Left toolbar ka Lock button = Excalidraw ka tool lock ("keep selected tool active after drawing", `Q`). `onChange` se `activeTool` aur `locked` sync hote hain, isliye toolbar ka highlight Excalidraw ke asli tool se match karta hai.
+- Code tab (Docs ki jagah, `components/custom/workspace/CodeFlow.tsx`):
+  - Code paste karo, AI se flowchart. Code save nahi hota (user ka faisla), photo support nahi.
+  - Limits `lib/codeFlow.ts`: 200 lines / 6000 characters. Language dropdown.
+  - `POST /api/ai/code`: 1 AI credit. Model Mermaid `flowchart TD` + `steps` deta hai. Code nahi hai to 422 + refund. Providers fail hon ya Mermaid na mile to refund.
+  - Browser mein `@excalidraw/mermaid-to-excalidraw` (2.2.2) se elements, `regenerateIds: true`, rang: ellipse hara (start/end), rectangle neela, diamond peela. Purani drawing ke right mein. Phir WhiteBoard tab aur `scrollToContent`.
+  - Steps pe click se code ki lines select. "Show on whiteboard". Mermaid draw na ho to toast, credit wapas nahi (browser check pe refund nahi diya).
 - `docs/TESTING.md`: user ki personal testing guide (app chalana, checklist, Studio/SQL se credits reset). `.gitignore` mein hai, commit nahi hoti.
 
 Abhi adhuri / known cheezein:
-- Docs tab (`SmartDocx.tsx`) sirf placeholder hai, koi content nahi. Kisi pending chapter mein nahi hai.
 - Workspace header ka Save aur Share button kuch nahi karta.
 - `/api/whiteboard` project ownership check nahi karta.
 - Login se pehle `POST /api/user` 404 deta hai (purana code).
@@ -86,11 +103,7 @@ Abhi adhuri / known cheezein:
 - Archive kiya hua board seedhe link se (ya Archive page pe card click se) ab bhi khul jaata hai.
 
 ## Pending chapters, is order mein
-| Order | Transcript file | Video chapter | Start |
-|---|---|---|---|
-| 6 | 01-floating-element-properties.md | Floating Element Properties | 3:09:52 |
-
-Dependency Claude ko code dekh ke confirm karni hai. Agar kisi chapter ko order se pehle chahiye ho to batao.
+Koi pending chapter nahi. Saare chapters done.
 
 ## AI provider (ban gaya hai)
 - **Primary: Groq** (console.groq.com, Elon wala Grok nahi). Model `openai/gpt-oss-120b`. Plain `fetch` se OpenAI-compatible `/chat/completions`, `response_format: json_schema` with `strict: true`. Strict mode mein saare fields required hain, optional fields nullable.

@@ -1,7 +1,12 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { Excalidraw, exportToBlob } from "@excalidraw/excalidraw";
+import {
+  Excalidraw,
+  exportToBlob,
+  getCommonBounds,
+  sceneCoordsToViewportCoords,
+} from "@excalidraw/excalidraw";
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 import "@excalidraw/excalidraw/index.css";
 import axios from "axios";
@@ -20,12 +25,14 @@ import {
   Image as ImageIcon,
   Eraser,
   Lock,
+  LockOpen,
   Sparkles,
 } from "lucide-react";
 
 import "./whiteboard.css";
 import AIFloatingSidebar, { AI_PLACEHOLDER_IDS } from "./AIFloatingSidebar";
 import ExtrasPanel from "./ExtrasPanel";
+import FloatingProperties, { type FloatingAnchor } from "./FloatingProperties";
 
 const PLACEHOLDER_IDS = Object.values(AI_PLACEHOLDER_IDS);
 
@@ -40,6 +47,15 @@ function Whiteboard({ onApiReady, isLoaded = true }: Props) {
   const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null);
   const [activeTool, setActiveTool] = useState("selection");
   const [showAISidebar, setShowAISidebar] = useState(false);
+  // "Keep selected tool active after drawing" (Excalidraw's own lock, shortcut Q)
+  const [toolLocked, setToolLocked] = useState(false);
+
+  // Selected elements + where to show the floating properties toolbar
+  const [floating, setFloating] = useState<{
+    elements: any[];
+    anchor: FloatingAnchor;
+  } | null>(null);
+  const selectionKeyRef = useRef("");
 
   const saveTimerRef = useRef<any>(null);
   const { projectid } = useParams();
@@ -69,11 +85,94 @@ function Whiteboard({ onApiReady, isLoaded = true }: Props) {
   /**
    * Save canvas
    */
+  /**
+   * Lock the active tool: after drawing a shape, stay on that tool
+   * instead of going back to Select.
+   */
+  const toggleToolLock = () => {
+    if (!excalidrawAPI) return;
+    const current = excalidrawAPI.getAppState().activeTool;
+    excalidrawAPI.setActiveTool({ type: current.type, locked: !current.locked });
+    setToolLocked(!current.locked);
+  };
+
+  /**
+   * Find the selected elements and where the floating toolbar should sit.
+   * onChange runs on every pointer move, so state is set only when something changed.
+   */
+  const TrackSelection = (elements: readonly any[], appState: any) => {
+    const selectedIds = appState.selectedElementIds ?? {};
+    const selected = elements.filter(
+      (el) =>
+        selectedIds[el.id] &&
+        !el.isDeleted &&
+        !el.locked &&
+        !PLACEHOLDER_IDS.includes(el.id) &&
+        // A label is handled through its shape
+        !(el.containerId && selectedIds[el.containerId])
+    );
+
+    // Hide while drawing, dragging, resizing, rotating or typing
+    const busy =
+      appState.newElement ||
+      appState.multiElement ||
+      appState.selectedElementsAreBeingDragged ||
+      appState.isResizing ||
+      appState.isRotating ||
+      appState.editingTextElement;
+
+    const key = busy || selected.length === 0
+      ? ""
+      : [
+          selected.map((el) => `${el.id}:${el.version}`).join(","),
+          appState.zoom.value,
+          appState.scrollX,
+          appState.scrollY,
+          appState.offsetLeft,
+          appState.offsetTop,
+        ].join("|");
+
+    if (key === selectionKeyRef.current) return;
+    selectionKeyRef.current = key;
+
+    if (!key) {
+      setFloating(null);
+      return;
+    }
+
+    // Selection box in scene coordinates -> screen pixels
+    const [minX, minY, maxX, maxY] = getCommonBounds(selected);
+    const toScreen = (sceneX: number, sceneY: number) =>
+      sceneCoordsToViewportCoords({ sceneX, sceneY }, appState);
+    const topLeft = toScreen(minX, minY);
+    const bottomRight = toScreen(maxX, maxY);
+
+    setFloating({
+      elements: selected,
+      anchor: {
+        centerX: (topLeft.x + bottomRight.x) / 2,
+        top: topLeft.y,
+        bottom: bottomRight.y,
+        canvasTop: appState.offsetTop,
+      },
+    });
+  };
+
   const HandleCanvas = (
     elements: readonly any[],
     appState: any,
     files: any
   ) => {
+    TrackSelection(elements, appState);
+
+    // Keep the custom toolbar in sync when Excalidraw changes the tool itself
+    // (back to Select after drawing, keyboard shortcuts, Q for lock).
+    // React skips the re-render when the value is the same.
+    if (appState.activeTool) {
+      setActiveTool(appState.activeTool.type);
+      setToolLocked(!!appState.activeTool.locked);
+    }
+
     if (!isLoaded) return;
 
     if (saveTimerRef.current) {
@@ -397,19 +496,19 @@ function Whiteboard({ onApiReady, isLoaded = true }: Props) {
           })}
         </div>
 
-        <div className="toolbar-divider" />
-
-        {/* Extras: notes, emoji, icons */}
-        <ExtrasPanel excalidrawAPI={excalidrawAPI} />
-
         <div className="toolbar-spacer" />
 
         {/* Bottom button */}
         <button
-          className="toolbar-bottom-button"
-          title="Lock toolbar"
+          className={`toolbar-bottom-button ${toolLocked ? "active" : ""}`}
+          title={
+            toolLocked
+              ? "Tool locked: stays active after drawing (Q)"
+              : "Lock tool: keep it active after drawing (Q)"
+          }
+          onClick={toggleToolLock}
         >
-          <Lock size={17} />
+          {toolLocked ? <Lock size={17} /> : <LockOpen size={17} />}
         </button>
       </div>
 
@@ -427,6 +526,26 @@ function Whiteboard({ onApiReady, isLoaded = true }: Props) {
           onChange={HandleCanvas}
         />
       </div>
+
+      {/* =========================
+          EXTRAS DOCK (bottom center): notes, emoji, icons
+      ========================== */}
+
+      <ExtrasPanel excalidrawAPI={excalidrawAPI} />
+
+      {/* =========================
+          FLOATING ELEMENT PROPERTIES
+      ========================== */}
+
+      {floating && excalidrawAPI && (
+        <FloatingProperties
+          // New selection = fresh toolbar (drag offset back to 0). Same selection keeps it.
+          key={floating.elements.map((el) => el.id).join(",")}
+          excalidrawAPI={excalidrawAPI}
+          selectedElements={floating.elements}
+          anchor={floating.anchor}
+        />
+      )}
 
       {/* =========================
           AI HELPER

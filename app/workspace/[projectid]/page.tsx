@@ -1,11 +1,11 @@
 "use client"
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
 import axios from 'axios';
 import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
 import WorkspaceHeader from '@/components/custom/workspace/WorkspaceHeader'
-import SmartDocx from '@/components/custom/workspace/SmartDocx';
+import CodeFlow from '@/components/custom/workspace/CodeFlow';
 import { toast } from '@/components/ui/toast';
 
 // Excalidraw uses `window` on import, so render the whiteboard only in the browser
@@ -20,6 +20,8 @@ function workspace() {
   const [projectName, setProjectName] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
   const { projectid } = useParams();
+  // Flowchart from the Code tab to zoom to once the whiteboard is visible again
+  const pendingFocusRef = useRef<any[] | null>(null);
 
   // Load the saved whiteboard once Excalidraw is ready
   useEffect(() => {
@@ -58,8 +60,23 @@ function workspace() {
 
   // Whiteboard stays mounted while hidden; recalculate its size when shown again
   useEffect(() => {
-    if (activeTab == 'WhiteBoard') excalidrawAPI?.refresh();
+    if (activeTab != 'WhiteBoard' || !excalidrawAPI) return;
+    excalidrawAPI.refresh();
+
+    // Coming from the Code tab: zoom to the new flowchart (after the canvas has its size)
+    const elements = pendingFocusRef.current;
+    if (elements) {
+      pendingFocusRef.current = null;
+      requestAnimationFrame(() =>
+        excalidrawAPI.scrollToContent(elements, { fitToContent: true, animate: true })
+      );
+    }
   }, [activeTab]);
+
+  const handleFlowchartReady = (elements: any[]) => {
+    pendingFocusRef.current = elements;
+    setActiveTab('WhiteBoard');
+  };
 
   const handleExportImage = async () => {
     if (!excalidrawAPI) return;
@@ -107,6 +124,7 @@ function workspace() {
     <div className=" h-screen">
       <WorkspaceHeader
         selectedTab={(value: string) => setActiveTab(value)}
+        activeTab={activeTab}
         onExport={handleExportImage}
         canExport={activeTab == 'WhiteBoard' && !!excalidrawAPI}
         projectName={projectName}
@@ -116,7 +134,10 @@ function workspace() {
       <div className={activeTab == 'WhiteBoard' ? '' : 'hidden'}>
         <Whiteboard onApiReady={setExcalidrawAPI} isLoaded={isLoaded} />
       </div>
-      {activeTab == 'Docs' && <SmartDocx />}
+      {/* Kept mounted (only hidden) so the pasted code and steps stay when switching tabs */}
+      <div className={activeTab == 'Code' ? '' : 'hidden'}>
+        <CodeFlow excalidrawAPI={excalidrawAPI} onFlowchartReady={handleFlowchartReady} />
+      </div>
     </div>
   )
 }
