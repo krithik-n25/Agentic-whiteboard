@@ -1,6 +1,8 @@
 "use client"
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic';
+import { useParams } from 'next/navigation';
+import axios from 'axios';
 import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
 import WorkspaceHeader from '@/components/custom/workspace/WorkspaceHeader'
 import SmartDocx from '@/components/custom/workspace/SmartDocx';
@@ -15,6 +17,49 @@ const Whiteboard = dynamic(
 function workspace() {
   const [activeTab, setActiveTab] = useState("WhiteBoard");
   const [excalidrawAPI, setExcalidrawAPI] = useState<ExcalidrawImperativeAPI | null>(null);
+  const [projectName, setProjectName] = useState("");
+  const [isLoaded, setIsLoaded] = useState(false);
+  const { projectid } = useParams();
+
+  // Load the saved whiteboard once Excalidraw is ready
+  useEffect(() => {
+    if (!excalidrawAPI || !projectid) return;
+    GetWhiteboardData(excalidrawAPI);
+  }, [excalidrawAPI, projectid]);
+
+  const GetWhiteboardData = async (api: ExcalidrawImperativeAPI) => {
+    try {
+      const result = await axios.get('/api/projects', { params: { projectId: projectid } });
+      const { projectName, elements, appState, files } = result.data;
+      setProjectName(projectName);
+
+      // restore* fills missing fields and cleans elements from the DB
+      const { restoreElements, restoreAppState, CaptureUpdateAction } = await import('@excalidraw/excalidraw');
+
+      // collaborators is a Map, but JSON saves it as {}. restoreAppState keeps the {}
+      // and Excalidraw crashes on .forEach, so drop it and let the default new Map() be used.
+      const { collaborators, ...savedAppState } = appState ?? {};
+
+      if (files && Object.keys(files).length > 0) {
+        api.addFiles(Object.values(files));
+      }
+      api.updateScene({
+        elements: restoreElements(elements, null),
+        appState: restoreAppState(savedAppState, null),
+        captureUpdate: CaptureUpdateAction.NEVER, // loading should not be undoable
+      });
+
+      setIsLoaded(true);
+    } catch (error) {
+      console.error("Failed to load whiteboard", error);
+      toast.add({ title: "Could not load whiteboard", type: "error" });
+    }
+  };
+
+  // Whiteboard stays mounted while hidden; recalculate its size when shown again
+  useEffect(() => {
+    if (activeTab == 'WhiteBoard') excalidrawAPI?.refresh();
+  }, [activeTab]);
 
   const handleExportImage = async () => {
     if (!excalidrawAPI) return;
@@ -64,12 +109,14 @@ function workspace() {
         selectedTab={(value: string) => setActiveTab(value)}
         onExport={handleExportImage}
         canExport={activeTab == 'WhiteBoard' && !!excalidrawAPI}
+        projectName={projectName}
       />
 
-      {activeTab == 'WhiteBoard'
-        ? <Whiteboard onApiReady={setExcalidrawAPI} />
-        : <SmartDocx />
-      }
+      {/* Hidden instead of unmounted, so unsaved changes and the API survive a tab switch */}
+      <div className={activeTab == 'WhiteBoard' ? '' : 'hidden'}>
+        <Whiteboard onApiReady={setExcalidrawAPI} isLoaded={isLoaded} />
+      </div>
+      {activeTab == 'Docs' && <SmartDocx />}
     </div>
   )
 }

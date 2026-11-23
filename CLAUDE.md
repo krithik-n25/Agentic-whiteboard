@@ -38,6 +38,7 @@ Video ke chapters jo done hain:
 9. 02:53:10 Customize Toolbar
 10. 03:45:12 AI Features (Diagrams) + 04:50:00 AI Extras (Claude ne banaya, user ne test karke commit kiya)
 11. 04:39:23 Export as Image
+12. 04:51:54 Fetch Whiteboard Data
 
 Codebase mein jo bana hua hai (code se verify kiya hua):
 - Next.js setup, Clerk auth, Drizzle DB with users, Projects, WhiteBoardContent schemas
@@ -52,10 +53,12 @@ Codebase mein jo bana hua hai (code se verify kiya hua):
 - AI diagram ke arrows code se route hote hain (`routeArrow`): seedha, L-shape, ya right side se ghoom ke. Boxes ki position model deta hai, use badla nahi jaata.
 - Extras: `components/custom/workspace/ExtrasPanel.tsx`, toolbar mein Note, Emoji aur Icons (lucide SVG image ki tarah)
 - Export as Image: workspace header mein Export button. Whiteboard `onApiReady` prop se Excalidraw API page ko deta hai (unmount pe null). Page `exportToBlob` se PNG download karta hai, AI placeholder filter hota hai. Docs tab pe button disabled.
+- Fetch Whiteboard Data: `GET /api/projects?projectId=` pehle ownership check karta hai (projectId + user email, warna 404), phir projectName, elements, appState, files deta hai (naye project pe khaali). Page data `restoreElements`/`restoreAppState` se `updateScene` + `addFiles` karta hai (undo history mein nahi). `appState.collaborators` load se pehle hataya jaata hai, kyunki JSON mein wo `{}` save hota hai aur Excalidraw crash karta hai. Load hone tak autosave band (`isLoaded` prop). Header mein asli project naam.
+- Docs tab pe Whiteboard unmount nahi hota, sirf `hidden` hota hai (unsaved changes aur API bachi rehti hai). Wapas aane pe `api.refresh()`.
 
 Abhi adhuri / known cheezein:
 - Docs tab (`SmartDocx.tsx`) sirf placeholder hai, koi content nahi. Kisi pending chapter mein nahi hai.
-- Workspace header ka Save aur Share button kuch nahi karta. Header mein naam "Workspace Name" hardcoded hai (Fetch Whiteboard Data chapter mein aayega).
+- Workspace header ka Save aur Share button kuch nahi karta.
 - `/api/whiteboard` project ownership check nahi karta.
 - Login se pehle `POST /api/user` 404 deta hai (purana code).
 - `testCase_img/` local AI test screenshots hain, .gitignore mein hai.
@@ -63,7 +66,6 @@ Abhi adhuri / known cheezein:
 ## Pending chapters, is order mein
 | Order | Transcript file | Video chapter | Start |
 |---|---|---|---|
-| 3 | 04-fetch-whiteboard-data.md | Fetch Whiteboard Data | 4:51:54 |
 | 4 | 05-display-project-list.md | Display Project List | 5:06:47 |
 | 5 | 06-credits-update.md | Credits Update | 5:39:02 |
 | 6 | 01-floating-element-properties.md | Floating Element Properties | 3:09:52 |

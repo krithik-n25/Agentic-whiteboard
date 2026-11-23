@@ -32,9 +32,11 @@ const PLACEHOLDER_IDS = Object.values(AI_PLACEHOLDER_IDS);
 type Props = {
   // Gives the Excalidraw API to the parent (used for Export). null on unmount.
   onApiReady?: (api: ExcalidrawImperativeAPI | null) => void;
+  // false until saved data is loaded, so the empty canvas never overwrites the DB
+  isLoaded?: boolean;
 };
 
-function Whiteboard({ onApiReady }: Props) {
+function Whiteboard({ onApiReady, isLoaded = true }: Props) {
   const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null);
   const [activeTool, setActiveTool] = useState("selection");
   const [showAISidebar, setShowAISidebar] = useState(false);
@@ -72,6 +74,8 @@ function Whiteboard({ onApiReady }: Props) {
     appState: any,
     files: any
   ) => {
+    if (!isLoaded) return;
+
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current);
     }

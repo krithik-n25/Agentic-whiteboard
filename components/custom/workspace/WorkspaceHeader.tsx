@@ -9,13 +9,14 @@ type Props={
     selectedTab:any;
     onExport:()=>void;
     canExport:boolean;
+    projectName:string;
 }
-function WorkspaceHeader({selectedTab,onExport,canExport}:Props) {
+function WorkspaceHeader({selectedTab,onExport,canExport,projectName}:Props) {
     return (
         <div className='p-3 border-b flex items-center justify-between'>
             <div className='flex gap-2 items-center'>
                 <Image src="/logo.svg" alt="logo" width={60} height={59} />
-                <h2 className='font-semibold text-lg'>Workspace Name</h2>
+                <h2 className='font-semibold text-lg'>{projectName || 'Loading...'}</h2>
             </div>
             {/* Switch theme */}
             <div >

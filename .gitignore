@@ -35,3 +35,4 @@ next-env.d.ts
 
 # local AI test screenshots
 testCase_img/
+errors_image/
