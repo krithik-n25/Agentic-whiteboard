@@ -5,9 +5,17 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { ThemeProvider } from "next-themes";
 import { useUser } from "@clerk/nextjs";
+import { applyAppearance, getSettings, useSettings } from "@/lib/settings";
 
 function Provider({ children }: { children: React.ReactNode }) {
   const [userDetails, setUserDetails] = useState<any>(null);
+
+  // Text size + font from Settings (the <head> script did it before paint; this keeps it in sync)
+  const settings = useSettings();
+  useEffect(() => {
+    // getSettings(), not `settings`: during hydration `settings` is still the default
+    applyAppearance(getSettings());
+  }, [settings]);
   const { isLoaded, isSignedIn, user } = useUser();
 
   // Only a signed-in user has a DB row. Before login (landing page) there is

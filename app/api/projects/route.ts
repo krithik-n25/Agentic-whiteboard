@@ -27,6 +27,8 @@ export async function GET(req:NextRequest){
     const projectId = req.nextUrl.searchParams.get("projectId");
     // ?archived=true gives the archive page list, otherwise the dashboard list
     const archived = req.nextUrl.searchParams.get("archived") === "true";
+    // ?shared=true gives "Shared by me": boards with the view-only link on
+    const shared = req.nextUrl.searchParams.get("shared") === "true";
 
     const user = await currentUser();
     const email = user?.primaryEmailAddress?.emailAddress;
@@ -41,6 +43,7 @@ export async function GET(req:NextRequest){
                 projectId: Projects.projectId,
                 projectName: Projects.projectName,
                 previewImage: WhiteBoardContent.previewImage,
+                isPublic: Projects.isPublic,
                 // Projects.updatedAt is never changed, the whiteboard save time is the real "edited"
                 // mapWith: parse like a timestamp column (UTC), not as a raw string without timezone
                 updatedAt: sql<Date>`coalesce(${WhiteBoardContent.updatedAt}, ${Projects.createdAt})`
@@ -49,7 +52,11 @@ export async function GET(req:NextRequest){
             .from(Projects)
             // left join: a new project has no whiteboard row yet but should still show up
             .leftJoin(WhiteBoardContent, eq(Projects.projectId, WhiteBoardContent.projectId))
-            .where(and(eq(Projects.userEmail, email), eq(Projects.isDeleted, archived)))
+            .where(and(
+                eq(Projects.userEmail, email),
+                eq(Projects.isDeleted, archived),
+                shared ? eq(Projects.isPublic, true) : undefined,
+            ))
             .orderBy(desc(sql`coalesce(${WhiteBoardContent.updatedAt}, ${Projects.createdAt})`));
 
             return NextResponse.json(projectList);

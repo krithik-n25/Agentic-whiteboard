@@ -4,7 +4,7 @@ import Image from 'next/image';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
-import { Archive, ArchiveRestore, Loader2, PenTool, Trash2 } from 'lucide-react';
+import { Archive, ArchiveRestore, Globe, Link2, Link2Off, Loader2, PenTool, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/components/ui/toast';
@@ -26,21 +26,24 @@ type Project = {
   projectName: string;
   previewImage: string | null;
   updatedAt: string;
+  isPublic: boolean;
 }
 
 type Props = {
-  // true on the archive page: shows archived boards with a Restore button
-  archived?: boolean;
+  // all: dashboard. archived: archive page (Restore button). shared: "Shared by me" (Copy link / Stop sharing)
+  view?: 'all' | 'archived' | 'shared';
 }
 
-function ProjectList({ archived = false }: Props) {
+function ProjectList({ view = 'all' }: Props) {
+  const archived = view === 'archived';
+  const shared = view === 'shared';
 
   const [ProjectList, setProjectList] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   // Project waiting for the user to confirm the delete
   const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
   const [deleting, setDeleting] = useState(false);
-  // Card being archived / restored, so its button can show a spinner
+  // Card being archived / restored / unshared, so its button can show a spinner
   const [archivingId, setArchivingId] = useState<string | null>(null);
   const router = useRouter();
 
@@ -50,7 +53,8 @@ function ProjectList({ archived = false }: Props) {
 
   const GetProjectList = async () => {
     try {
-      const result = await axios.get('/api/projects', { params: archived ? { archived: true } : {} });
+      const params = archived ? { archived: true } : shared ? { shared: true } : {};
+      const result = await axios.get('/api/projects', { params });
       setProjectList(result.data);
     } catch (error) {
       console.error("Failed to load projects", error);
@@ -96,6 +100,32 @@ function ProjectList({ archived = false }: Props) {
     }
   };
 
+  const shareUrl = (project: Project) => `${window.location.origin}/share/${project.projectId}`;
+
+  const HandleCopyLink = async (project: Project) => {
+    try {
+      await navigator.clipboard.writeText(shareUrl(project));
+      toast.add({ title: "Link copied", type: "success" });
+    } catch {
+      toast.add({ title: "Could not copy", description: shareUrl(project), type: "error" });
+    }
+  };
+
+  // Turns the view-only link off; the board leaves this list
+  const HandleStopSharing = async (project: Project) => {
+    try {
+      setArchivingId(project.projectId);
+      await axios.post('/api/projects/share', { projectId: project.projectId, isPublic: false });
+      toast.add({ title: "Sharing stopped", description: `The link to "${project.projectName}" does not work anymore.`, type: "success" });
+      GetProjectList();
+    } catch (error) {
+      console.error("Failed to stop sharing", error);
+      toast.add({ title: "Could not stop sharing", type: "error" });
+    } finally {
+      setArchivingId(null);
+    }
+  };
+
   // Skeleton while loading, so the empty state does not flash first
   if (loading) {
     return (
@@ -115,6 +145,12 @@ function ProjectList({ archived = false }: Props) {
           <h1 className='text-2xl font-bold'>No archived boards</h1>
           <p className='text-muted-foreground'>Boards you archive will show up here.</p>
         </div>
+      ) : ProjectList.length === 0 && shared ? (
+        <div className='flex flex-col items-center gap-2 mt-8 border-2 rounded-xl p-10 text-center'>
+          <Globe className='h-10 w-10 text-muted-foreground' />
+          <h1 className='text-2xl font-bold'>No shared boards</h1>
+          <p className='text-muted-foreground'>Open a board and click Share to create a view-only link.</p>
+        </div>
       ) : ProjectList.length === 0 ? (
         <div className='flex flex-col items-center p-10 gap-4 mt-8 border-2 rounded-xl p-10'>
           <Image src="/image.png" alt="Folder Image" width={50} height={50} />
@@ -126,11 +162,15 @@ function ProjectList({ archived = false }: Props) {
         </div>
       ) :
         <div className='mt-10'>
-          <h2 className='text-2xl font-bold'>{archived ? 'Archived Boards' : 'Your Boards'}</h2>
+          <h2 className='text-2xl font-bold'>
+            {archived ? 'Archived Boards' : shared ? 'Shared by me' : 'Your Boards'}
+          </h2>
           <p className='text-muted-foreground'>
             {archived
               ? 'Restore a board to bring it back to your dashboard.'
-              : 'Create, organize and continue working on your ideas.'}
+              : shared
+                ? 'Anyone with the link can view these boards (read only).'
+                : 'Create, organize and continue working on your ideas.'}
           </p>
 
           <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 mt-3'>
@@ -141,7 +181,13 @@ function ProjectList({ archived = false }: Props) {
                 className='group cursor-pointer overflow-hidden rounded-xl border bg-card transition hover:shadow-md hover:border-primary/40'
               >
                 {/* Preview: base64 data URL, so a plain img (next/image cannot optimize it) */}
-                <div className='aspect-video border-b bg-muted'>
+                <div className='relative aspect-video border-b bg-muted'>
+                  {/* Dashboard: show which boards have a view-only link */}
+                  {view === 'all' && project.isPublic && (
+                    <span className='absolute left-2 top-2 flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-xs text-green-700 shadow-sm'>
+                      <Globe className='h-3 w-3' /> Shared
+                    </span>
+                  )}
                   {project.previewImage ? (
                     <img
                       src={project.previewImage}
@@ -164,6 +210,38 @@ function ProjectList({ archived = false }: Props) {
                   </div>
                   {/* stopPropagation: these buttons should not open the workspace */}
                   <div className='flex shrink-0 items-center'>
+                    {shared ? (
+                      <>
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          title='Copy link'
+                          className='text-muted-foreground hover:text-sky-500 hover:bg-sky-50 dark:hover:bg-sky-950/40'
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            HandleCopyLink(project);
+                          }}
+                        >
+                          <Link2 className='h-4 w-4' />
+                        </Button>
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          title='Stop sharing'
+                          disabled={archivingId === project.projectId}
+                          className='text-muted-foreground hover:text-destructive'
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            HandleStopSharing(project);
+                          }}
+                        >
+                          {archivingId === project.projectId
+                            ? <Loader2 className='h-4 w-4 animate-spin' />
+                            : <Link2Off className='h-4 w-4' />}
+                        </Button>
+                      </>
+                    ) : (
+                    <>
                     <Button
                       variant='ghost'
                       size='icon'
@@ -193,6 +271,8 @@ function ProjectList({ archived = false }: Props) {
                     >
                       <Trash2 className='h-4 w-4' />
                     </Button>
+                    </>
+                    )}
                   </div>
                 </div>
               </div>

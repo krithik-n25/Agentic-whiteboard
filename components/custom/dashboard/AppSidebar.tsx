@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
-import { Archive, FileIcon, LayoutGrid, Settings, Sparkle, UserRound } from "lucide-react";
+import { Archive, FileIcon, LayoutGrid, Settings, UserRound } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { Progress } from "@/components/ui/progress";
 import { useUser } from "@clerk/nextjs";
@@ -64,9 +64,9 @@ export function AppSidebar() {
             <LayoutGrid/>
             <span>All File</span>
           </SidebarMenuButton>
-          <SidebarMenuButton className="p-5 text-md mt-2 font-semibold" isActive={path.includes('dashboard/shared-files')}>
+          <SidebarMenuButton className="p-5 text-md mt-2 font-semibold" isActive={path.includes('dashboard/shared')} render={<Link href="/dashboard/shared" />}>
             <UserRound/>
-            <span>Shared</span>
+            <span>Shared by me</span>
           </SidebarMenuButton>
           <SidebarMenuButton className="p-5 text-md mt-2 font-semibold" isActive={path.includes('dashboard/archive')} render={<Link href="/dashboard/archive" />}>
             <Archive/>
@@ -75,11 +75,7 @@ export function AppSidebar() {
         </SidebarGroup>
         <SidebarGroup>
           <SidebarGroupLabel>Other</SidebarGroupLabel>
-          <SidebarMenuButton className="p-5 text-md font-semibold" isActive={path.includes('ai')}>
-            <Sparkle/>
-            <span>AI-Assistents</span>
-          </SidebarMenuButton>
-          <SidebarMenuButton className="p-5 text-md mt-2 font-semibold" isActive={path.includes('settings')}>
+          <SidebarMenuButton className="p-5 text-md font-semibold" isActive={path.includes('dashboard/settings')} render={<Link href="/dashboard/settings" />}>
             <Settings/>
             <span>Settings</span>
           </SidebarMenuButton>

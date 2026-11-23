@@ -12,6 +12,8 @@ import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 import "@excalidraw/excalidraw/index.css";
 import axios from "axios";
 import { useParams } from "next/navigation";
+import { useTheme } from "next-themes";
+import { getSettings, useSettings } from "@/lib/settings";
 
 import {
   MousePointer2,
@@ -63,6 +65,14 @@ function Whiteboard({ onApiReady, isLoaded = true, onSaveReady, onSaveStatus }: 
     anchor: FloatingAnchor;
   } | null>(null);
   const selectionKeyRef = useRef("");
+
+  // Settings > Whiteboard: canvas theme ("app" follows the light / dark app theme)
+  const settings = useSettings();
+  const { resolvedTheme } = useTheme();
+  const canvasTheme =
+    settings.canvasTheme === "app"
+      ? resolvedTheme === "dark" ? "dark" : "light"
+      : settings.canvasTheme;
 
   const saveTimerRef = useRef<any>(null);
   // Scene version (sum of element versions) last written to the DB.
@@ -213,7 +223,7 @@ function Whiteboard({ onApiReady, isLoaded = true, onSaveReady, onSaveStatus }: 
     saveTimerRef.current = setTimeout(() => {
       saveTimerRef.current = null;
       SaveCanvasData(elementsToSave, appState, files);
-    }, 10000);
+    }, getSettings().autosaveSeconds * 1000); // Settings > Whiteboard > Autosave
   };
 
   /**
@@ -587,6 +597,7 @@ function Whiteboard({ onApiReady, isLoaded = true, onSaveReady, onSaveStatus }: 
             onApiReady?.(api);
           }}
           onChange={HandleCanvas}
+          theme={canvasTheme}
         />
       </div>
 

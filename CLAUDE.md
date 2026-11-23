@@ -69,7 +69,8 @@ Codebase mein jo bana hua hai (code se verify kiya hua):
   - `ProjectList.tsx`: loading skeleton, "Your Boards" grid (2/3/4 column), card pe preview (plain `<img>`, na ho to icon), naam, `date-fns` se "Edited ... ago". Card click se `router.push` workspace.
   - Card pe Archive button (bina dialog, seedha archive, toast, hover pe light blue) aur Trash button (confirm dialog, phir permanent delete, toast).
   - Archive page `app/dashboard/archive/page.tsx` = `<ProjectList archived />`. Wahan Archive ki jagah Restore button (bina dialog, toast) aur Trash (permanent delete). Khaali ho to "No archived boards".
-  - Sidebar: "All File" `/dashboard` aur "Archived" `/dashboard/archive` ke links (`render={<Link />}`). "All File" sirf exact `/dashboard` pe highlight. Shared, AI-Assistents, Settings abhi kahin nahi jaate.
+  - Sidebar: "All File" `/dashboard`, "Shared by me" `/dashboard/shared`, "Archived" `/dashboard/archive`, "Settings" `/dashboard/settings` (`render={<Link />}`). "All File" sirf exact `/dashboard` pe highlight. "AI-Assistents" hata diya (khaali button tha).
+  - `ProjectList` ka prop `view`: `all` | `archived` | `shared`. Dashboard card pe share on ho to hara "Shared" badge.
 - Credits Update (video se alag, user ka faisla):
   - Boards ki koi limit nahi. Limit sirf AI ki: `lib/plans.ts` mein `FREE_AI_CREDITS = 10` har mahine, har mahine ki 1 tareekh (UTC) ko refill. Limit badalni ho to sirf yahi file.
   - Schema: `users.credits` = AI credits (default `FREE_AI_CREDITS`), `users.credits_reset_at` (null matlab agle check pe refill). DB push ho chuka hai.
@@ -99,6 +100,12 @@ Codebase mein jo bana hua hai (code se verify kiya hua):
   - `POST /api/projects/share` `{ projectId, isPublic }` sirf owner. `GET /api/projects?projectId=` ab `isPublic` bhi deta hai.
   - `GET /api/share?projectId=` public (bina login): sirf `isPublic = true` aur archived nahi, warna 404 (not-found aur not-shared ka ek hi jawab). Sirf naam + scene, email nahi.
   - `components/custom/workspace/ShareDialog.tsx`: switch, link copy. Public page `app/share/[projectid]/page.tsx` + `components/custom/share/ShareViewer.tsx` (`viewModeEnabled`, Refresh button, last saved version dikhta hai).
+- Shared by me (`app/dashboard/shared/page.tsx`): `GET /api/projects?shared=true` (isPublic aur archived nahi). Card pe Copy link aur Stop sharing.
+- Settings (`app/dashboard/settings/page.tsx` + `components/custom/settings/SettingsPage.tsx`), browser mein (localStorage, `lib/settings.ts`, `useSettings` hook):
+  - Appearance: theme (next-themes), text size (`html` font-size 14/16/18/20px, Tailwind rem se poori app), font (Inter/Poppins/Nunito/System, `html[data-font]` -> `--font-sans` `globals.css` mein). `lib/settingsBoot.ts` ka script `<head>` mein paint se pehle lagata hai (React-free, kyunki layout server component hai).
+  - Whiteboard: canvas theme (Excalidraw `theme` prop, "app" = app theme), grid aur naye text ka font (board load pe appState mein), autosave 5/10/30 sec.
+  - Account: Clerk profile, `openUserProfile`, `signOut`. AI credits progress.
+  - Data: "Delete all archived boards" (`DELETE /api/projects/archived`, `db.batch`), aur settings reset.
 - `/api/whiteboard` ab owner check karta hai (projectId + email, warna 404).
 - `Provider` sirf login hone pe `POST /api/user` call karta hai, logout pe details null. `/api/user` bina login 401 deta hai.
 - `docs/TESTING.md`: user ki personal testing guide (app chalana, checklist, Studio/SQL se credits reset). `.gitignore` mein hai, commit nahi hoti.

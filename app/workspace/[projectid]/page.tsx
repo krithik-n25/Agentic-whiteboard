@@ -7,6 +7,7 @@ import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
 import WorkspaceHeader from '@/components/custom/workspace/WorkspaceHeader'
 import CodeFlow from '@/components/custom/workspace/CodeFlow';
 import type { SaveStatus } from '@/components/custom/workspace/Whiteboard';
+import { getSettings } from '@/lib/settings';
 import { toast } from '@/components/ui/toast';
 
 // Excalidraw uses `window` on import, so render the whiteboard only in the browser
@@ -76,7 +77,9 @@ function workspace() {
       setIsPublic(!!result.data.isPublic);
 
       // restore* fills missing fields and cleans elements from the DB
-      const { restoreElements, restoreAppState, CaptureUpdateAction } = await import('@excalidraw/excalidraw');
+      const { restoreElements, restoreAppState, CaptureUpdateAction, FONT_FAMILY } = await import('@excalidraw/excalidraw');
+
+      const settings = getSettings();
 
       // collaborators is a Map, but JSON saves it as {}. restoreAppState keeps the {}
       // and Excalidraw crashes on .forEach, so drop it and let the default new Map() be used.
@@ -87,7 +90,16 @@ function workspace() {
       }
       api.updateScene({
         elements: restoreElements(elements, null),
-        appState: restoreAppState(savedAppState, null),
+        appState: {
+          ...restoreAppState(savedAppState, null),
+          // Settings > Whiteboard: grid and the font for new text, on every board
+          gridModeEnabled: settings.grid,
+          currentItemFontFamily: {
+            hand: FONT_FAMILY.Excalifont,
+            normal: FONT_FAMILY.Nunito,
+            code: FONT_FAMILY['Comic Shanns'],
+          }[settings.canvasFont],
+        },
         captureUpdate: CaptureUpdateAction.NEVER, // loading should not be undoable
       });
 
