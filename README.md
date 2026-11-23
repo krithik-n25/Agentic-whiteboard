@@ -49,7 +49,7 @@
 
 > *Sleek dark-mode hero with gradient typography and feature highlights*
 
-<img src="public/screenshots/hero.jpg" alt="Agentic Whiteboard — Landing Page" width="100%" style="border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);" />
+<img src="public/screenshots/hero.png" alt="Agentic Whiteboard — Landing Page" width="100%" style="border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);" />
 
 <br/><br/>
 
@@ -65,7 +65,7 @@
 
 > *Excalidraw-powered infinite canvas with a custom glassmorphism toolbar*
 
-<img src="public/screenshots/whiteboard.jpg" alt="Agentic Whiteboard — Whiteboard Canvas" width="100%" style="border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);" />
+<img src="public/screenshots/whiteboard.png" alt="Agentic Whiteboard — Whiteboard Canvas" width="100%" style="border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);" />
 
 </div>
 
