@@ -1,4 +1,4 @@
-<img width="1553" height="706" alt="image" src="https://github.com/user-attachments/assets/14feafcc-08d3-4da0-8c75-b30c8c6bbd47" /><div align="center">
+<img width="1553" height="706" alt="image"/><div align="center">
 <!-- HERO BADGE -->
 <img src="https://img.shields.io/badge/%E2%9C%A8_Agentic_Whiteboard-v0.1.0-7c5cff?style=for-the-badge&labelColor=0b1020" alt="version" />
 
