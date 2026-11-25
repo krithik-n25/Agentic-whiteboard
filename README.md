@@ -73,24 +73,6 @@
 
 <img src="public/screenshots/whiteboard.png" alt="Agentic Whiteboard — Whiteboard Canvas" width="100%" />
 
-<br/><br/>
-
-### 🤖 AI Diagram
-
-> *Type a prompt, pick a diagram type, and the AI draws it on the canvas*
-
-<!-- TODO: add public/screenshots/ai-diagram.png -->
-<img src="public/screenshots/ai-diagram.png" alt="Agentic Whiteboard — AI Diagram" width="100%" />
-
-<br/><br/>
-
-### 🖼️ Export as Image
-
-> *Download the board as a PNG from the workspace header*
-
-<!-- TODO: add public/screenshots/export.png -->
-<img src="public/screenshots/export.png" alt="Agentic Whiteboard — Export as Image" width="100%" />
-
 </div>
 
 <br/>
