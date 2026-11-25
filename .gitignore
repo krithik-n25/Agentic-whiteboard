@@ -36,6 +36,8 @@ next-env.d.ts
 # local AI test screenshots
 testCase_img/
 errors_image/
+docs/
 
 # personal testing guide (local only)
 docs/TESTING.md
+CLAUDE.md
