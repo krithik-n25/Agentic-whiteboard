@@ -438,27 +438,11 @@ Contributions are welcome! Here's how:
 
 ---
 
-## 🙏 Credits
-
-This project is built on the concepts of [this YouTube tutorial](https://www.youtube.com/watch?v=mXSt_YSlp-U), with many parts done in its own way.
-
-<br/>
-
----
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
-<br/>
-
----
-
 <div align="center">
 
 <br/>
 
-**Built with ❤️ using Next.js, Excalidraw & AI**
+**Built with using Next.js, Excalidraw & AI**
 
 <br/>
 
