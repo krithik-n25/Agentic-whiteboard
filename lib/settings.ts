@@ -6,13 +6,11 @@ export { TEXT_SIZE_PX };
 export type { TextSize };
 
 export type AppFont = "inter" | "poppins" | "nunito" | "system";
-export type CanvasTheme = "app" | "light" | "dark";
 export type CanvasFont = "hand" | "normal" | "code";
 
 export type Settings = {
   textSize: TextSize;
   font: AppFont;
-  canvasTheme: CanvasTheme; // "app" = follow the app theme
   grid: boolean;
   canvasFont: CanvasFont; // default font for new text on the board
   autosaveSeconds: number;
@@ -21,7 +19,6 @@ export type Settings = {
 export const DEFAULT_SETTINGS: Settings = {
   textSize: "md",
   font: "inter",
-  canvasTheme: "app",
   grid: false,
   canvasFont: "hand",
   autosaveSeconds: 10,

@@ -24,7 +24,7 @@ export const AI_TOOLS: AITool[] = [
     name: "Flowchart",
     description: "Step by step process with decisions",
     icon: Workflow,
-    color: "text-blue-600 bg-blue-50",
+    color: "text-blue-600 bg-blue-50 dark:text-blue-300 dark:bg-blue-500/15",
     prompt: `You create clear flowcharts.
 - Use "ellipse" for Start and End.
 - Use "rectangle" for process steps.
@@ -35,7 +35,7 @@ export const AI_TOOLS: AITool[] = [
     name: "Architecture Diagram",
     description: "System components and how they talk",
     icon: Network,
-    color: "text-purple-600 bg-purple-50",
+    color: "text-purple-600 bg-purple-50 dark:text-purple-300 dark:bg-purple-500/15",
     prompt: `You create software architecture diagrams.
 - Each component (client, API, service, database, queue, cache, third party) is a "rectangle". Use "ellipse" for databases.
 - Arrange in layers from left to right: clients -> gateway/API -> services -> data stores.
@@ -45,7 +45,7 @@ export const AI_TOOLS: AITool[] = [
     name: "Mind Map",
     description: "Central idea with branching topics",
     icon: Brain,
-    color: "text-pink-600 bg-pink-50",
+    color: "text-pink-600 bg-pink-50 dark:text-pink-300 dark:bg-pink-500/15",
     prompt: `You create mind maps.
 - One central "ellipse" with the main idea in the middle.
 - 4 to 7 main topics as "rectangle" around it, each connected from the center.
@@ -55,7 +55,7 @@ export const AI_TOOLS: AITool[] = [
     name: "Web Wireframe",
     description: "Desktop page layout mockup",
     icon: Monitor,
-    color: "text-emerald-600 bg-emerald-50",
+    color: "text-emerald-600 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-500/15",
     prompt: `You create low fidelity desktop web wireframes.
 - First element: a large "rectangle" page frame 1200 wide, white background, no text.
 - Inside it, place sections as "rectangle" elements: navbar, hero, content cards, footer, etc.
@@ -66,7 +66,7 @@ export const AI_TOOLS: AITool[] = [
     name: "Mobile Wireframe",
     description: "Phone screen layout mockup",
     icon: Smartphone,
-    color: "text-orange-600 bg-orange-50",
+    color: "text-orange-600 bg-orange-50 dark:text-orange-300 dark:bg-orange-500/15",
     prompt: `You create low fidelity mobile app wireframes.
 - First element: a "rectangle" phone frame of width 375 and height 812, white background, no text.
 - Inside it, place UI parts: status/header bar, inputs, buttons, lists, bottom nav as "rectangle" elements with labels.

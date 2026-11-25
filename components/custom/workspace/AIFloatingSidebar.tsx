@@ -408,7 +408,7 @@ function AIFloatingSidebar({ excalidrawAPI, onClose }: Props) {
   };
 
   return (
-    <div className="absolute right-4 bottom-32 z-50 w-[380px] max-h-[620px] overflow-y-auto rounded-xl border bg-white p-5 shadow-xl">
+    <div className="absolute right-4 bottom-32 z-50 w-[380px] max-h-[620px] overflow-y-auto rounded-xl border border-border bg-card p-5 text-card-foreground shadow-xl">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="flex items-center gap-2 text-lg font-medium">
@@ -419,7 +419,7 @@ function AIFloatingSidebar({ excalidrawAPI, onClose }: Props) {
           <X className="h-4 w-4" />
         </Button>
       </div>
-      <p className="text-sm text-gray-500">Turn ideas into visuals in seconds</p>
+      <p className="text-sm text-muted-foreground">Turn ideas into visuals in seconds</p>
 
       {/* Tools */}
       <div className="mt-4 grid grid-cols-2 gap-2">
@@ -436,7 +436,7 @@ function AIFloatingSidebar({ excalidrawAPI, onClose }: Props) {
               className={`flex items-center gap-2 rounded-md border p-2 text-left transition ${
                 isSelected
                   ? "border-indigo-500 ring-1 ring-indigo-500"
-                  : "hover:bg-gray-50"
+                  : "hover:bg-accent"
               }`}
             >
               <div className={`rounded-sm p-2 ${tool.color}`}>
@@ -446,7 +446,7 @@ function AIFloatingSidebar({ excalidrawAPI, onClose }: Props) {
                 <h3 className="line-clamp-1 text-sm font-medium">
                   {tool.name}
                 </h3>
-                <p className="line-clamp-1 text-xs text-gray-400">
+                <p className="line-clamp-1 text-xs text-muted-foreground">
                   {tool.description}
                 </p>
               </div>
@@ -484,7 +484,7 @@ function AIFloatingSidebar({ excalidrawAPI, onClose }: Props) {
             AI credits finished for this month. They reset on {resetDate}.
           </p>
         ) : userDetails ? (
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-muted-foreground">
             {aiCredits} / {FREE_AI_CREDITS} AI credits left · 1 credit per generation
           </p>
         ) : null}

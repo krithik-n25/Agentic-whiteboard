@@ -216,14 +216,14 @@ function CodeFlow({ excalidrawAPI, onFlowchartReady }: Props) {
   return (
     <div className="grid h-[calc(100vh-85px)] grid-cols-1 gap-4 overflow-auto p-4 lg:grid-cols-[1fr_380px]">
       {/* Code */}
-      <div className="flex min-h-[420px] flex-col rounded-xl border bg-white">
+      <div className="flex min-h-[420px] flex-col rounded-xl border bg-card text-card-foreground">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b p-3">
           <div>
             <h2 className="flex items-center gap-2 font-semibold">
               <GitBranch className="h-4 w-4 text-indigo-500" />
               Code to Flowchart
             </h2>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               Paste code with loops and conditions. AI draws how it runs.
             </p>
           </div>
@@ -232,7 +232,7 @@ function CodeFlow({ excalidrawAPI, onFlowchartReady }: Props) {
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
               disabled={loading}
-              className="h-8 rounded-md border bg-white px-2 text-sm"
+              className="h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground disabled:opacity-50"
             >
               {CODE_LANGUAGES.map((lang) => (
                 <option key={lang} value={lang}>
@@ -258,7 +258,7 @@ function CodeFlow({ excalidrawAPI, onFlowchartReady }: Props) {
           <div
             ref={gutterRef}
             aria-hidden
-            className="select-none overflow-hidden border-r bg-gray-50 px-3 py-3 text-right text-gray-400"
+            className="select-none overflow-hidden border-r bg-muted px-3 py-3 text-right text-muted-foreground"
           >
             {Array.from({ length: lineCount }, (_, i) => (
               <div key={i}>{i + 1}</div>
@@ -274,12 +274,12 @@ function CodeFlow({ excalidrawAPI, onFlowchartReady }: Props) {
             spellCheck={false}
             wrap="off"
             placeholder={"// Paste your code here\nfor (let i = 0; i < 5; i++) {\n  console.log(i);\n}"}
-            className="min-h-0 flex-1 resize-none overflow-auto bg-white p-3 leading-6 outline-none"
+            className="min-h-0 flex-1 resize-none overflow-auto bg-card p-3 leading-6 text-foreground outline-none placeholder:text-muted-foreground disabled:opacity-60"
           />
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-2 border-t p-3">
-          <span className={`text-xs ${tooLong ? "text-red-500" : "text-gray-400"}`}>
+          <span className={`text-xs ${tooLong ? "text-red-500" : "text-muted-foreground"}`}>
             {lineCount} / {MAX_CODE_LINES} lines · {code.length} / {MAX_CODE_CHARS} characters
           </span>
           <div className="flex flex-col items-end gap-1">
@@ -296,7 +296,7 @@ function CodeFlow({ excalidrawAPI, onFlowchartReady }: Props) {
                 AI credits finished for this month. They reset on {resetDate}.
               </p>
             ) : userDetails ? (
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-muted-foreground">
                 {aiCredits} / {FREE_AI_CREDITS} AI credits left · 1 credit per flowchart
               </p>
             ) : null}
@@ -305,17 +305,17 @@ function CodeFlow({ excalidrawAPI, onFlowchartReady }: Props) {
       </div>
 
       {/* Explanation */}
-      <div className="flex flex-col rounded-xl border bg-white">
+      <div className="flex flex-col rounded-xl border bg-card text-card-foreground">
         <div className="border-b p-3">
           <h2 className="font-semibold">How it works</h2>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             {result ? result.title : "Steps appear here after you generate a flowchart."}
           </p>
         </div>
 
         <div className="flex-1 overflow-auto p-3">
           {!result ? (
-            <ul className="space-y-2 text-sm text-gray-500">
+            <ul className="space-y-2 text-sm text-muted-foreground">
               <li><span className="mr-2 inline-block h-3 w-3 rounded-full bg-[#b2f2bb] align-middle" />Start / End</li>
               <li><span className="mr-2 inline-block h-3 w-3 rounded-sm bg-[#a5d8ff] align-middle" />Step (a statement)</li>
               <li><span className="mr-2 inline-block h-3 w-3 rotate-45 bg-[#ffec99] align-middle" />Decision (if / loop condition)</li>
@@ -327,12 +327,12 @@ function CodeFlow({ excalidrawAPI, onFlowchartReady }: Props) {
                   <button
                     type="button"
                     onClick={() => highlightLines(step.lines)}
-                    className="w-full rounded-lg border p-2 text-left text-sm transition hover:border-indigo-300 hover:bg-indigo-50"
+                    className="w-full rounded-lg border p-2 text-left text-sm transition hover:border-indigo-300 hover:bg-accent"
                     title={step.lines ? "Highlight these lines in the code" : undefined}
                   >
                     <span className="mr-2 font-semibold text-indigo-600">{i + 1}.</span>
                     {step.lines && (
-                      <span className="mr-2 rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs text-gray-600">
+                      <span className="mr-2 rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground">
                         line {step.lines}
                       </span>
                     )}

@@ -37,7 +37,8 @@ function ShareViewer({ projectId }: Props) {
         projectName,
         initialData: {
           elements: restoreElements(elements, null),
-          appState: { ...restoreAppState(savedAppState, null), viewModeEnabled: true },
+          // The workspace saves a transparent background (its dots are CSS), keep this page plain white
+          appState: { ...restoreAppState(savedAppState, null), viewBackgroundColor: "#ffffff", viewModeEnabled: true },
           files: files ?? {},
           scrollToContent: true,
         },

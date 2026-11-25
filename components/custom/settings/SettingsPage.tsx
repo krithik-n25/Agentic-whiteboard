@@ -188,17 +188,6 @@ function SettingsPage() {
 
       {/* Whiteboard */}
       <Section title='Whiteboard' description='Applied when you open a board.'>
-        <Row label='Canvas theme' hint='"Follow app" uses the light / dark theme above.'>
-          <Segmented
-            value={settings.canvasTheme}
-            onChange={(canvasTheme) => updateSettings({ canvasTheme })}
-            options={[
-              { value: 'app', label: 'Follow app' },
-              { value: 'light', label: 'Light' },
-              { value: 'dark', label: 'Dark' },
-            ]}
-          />
-        </Row>
         <Row label='Grid' hint='Show a grid on the canvas. Shapes snap to it.'>
           <Switch checked={settings.grid} onCheckedChange={(grid) => updateSettings({ grid })} />
         </Row>

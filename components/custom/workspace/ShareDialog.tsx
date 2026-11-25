@@ -1,14 +1,13 @@
 "use client"
 import React, { useState } from 'react'
 import axios from 'axios'
-import { Check, Copy, Globe, Loader2, Lock, Share } from 'lucide-react'
+import { Check, Copy, Globe, Loader2, Lock } from 'lucide-react'
 import {
     Dialog,
     DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,11 +18,14 @@ type Props = {
     projectId: string;
     isPublic: boolean;
     onChange: (isPublic: boolean) => void;
-    disabled?: boolean;
+    // Controlled: the header's "more" menu opens it. The dialog lives outside the menu,
+    // so closing the menu does not unmount it.
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
 }
 
-// Header Share button: turn the view-only link on / off and copy it
-function ShareDialog({ projectId, isPublic, onChange, disabled }: Props) {
+// Share dialog: turn the view-only link on / off and copy it
+function ShareDialog({ projectId, isPublic, onChange, open, onOpenChange }: Props) {
     const [updating, setUpdating] = useState(false);
     const [copied, setCopied] = useState(false);
 
@@ -59,10 +61,7 @@ function ShareDialog({ projectId, isPublic, onChange, disabled }: Props) {
     };
 
     return (
-        <Dialog>
-            <DialogTrigger render={<Button variant={'outline'} disabled={disabled} />}>
-                <Share /> Share
-            </DialogTrigger>
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle className="text-lg font-bold">Share board</DialogTitle>

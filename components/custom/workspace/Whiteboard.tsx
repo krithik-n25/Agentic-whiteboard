@@ -12,8 +12,7 @@ import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 import "@excalidraw/excalidraw/index.css";
 import axios from "axios";
 import { useParams } from "next/navigation";
-import { useTheme } from "next-themes";
-import { getSettings, useSettings } from "@/lib/settings";
+import { getSettings } from "@/lib/settings";
 
 import {
   MousePointer2,
@@ -38,6 +37,8 @@ import ExtrasPanel from "./ExtrasPanel";
 import FloatingProperties, { type FloatingAnchor } from "./FloatingProperties";
 
 const PLACEHOLDER_IDS = Object.values(AI_PLACEHOLDER_IDS);
+// Space between background dots in scene px (same as Excalidraw's grid size)
+const DOT_GAP = 20;
 
 export type SaveStatus = "saved" | "unsaved" | "saving" | "error";
 
@@ -66,13 +67,6 @@ function Whiteboard({ onApiReady, isLoaded = true, onSaveReady, onSaveStatus }: 
   } | null>(null);
   const selectionKeyRef = useRef("");
 
-  // Settings > Whiteboard: canvas theme ("app" follows the light / dark app theme)
-  const settings = useSettings();
-  const { resolvedTheme } = useTheme();
-  const canvasTheme =
-    settings.canvasTheme === "app"
-      ? resolvedTheme === "dark" ? "dark" : "light"
-      : settings.canvasTheme;
 
   const saveTimerRef = useRef<any>(null);
   // Scene version (sum of element versions) last written to the DB.
@@ -189,11 +183,40 @@ function Whiteboard({ onApiReady, isLoaded = true, onSaveReady, onSaveStatus }: 
     });
   };
 
+  /**
+   * Move the background dots with the canvas (pan + zoom).
+   * Set as CSS variables on the wrapper, not React state: onChange runs on every pointer move.
+   */
+  const dotsRef = useRef<HTMLDivElement>(null);
+  const dotsKeyRef = useRef("");
+  const SyncDots = (appState: any) => {
+    const wrapper = dotsRef.current;
+    const zoom = appState.zoom?.value ?? 1;
+    const key = `${zoom}|${appState.scrollX}|${appState.scrollY}`;
+    if (!wrapper || key === dotsKeyRef.current) return;
+    dotsKeyRef.current = key;
+
+    // 20 = Excalidraw's grid size, so dots sit on the grid lines.
+    // Zoomed far out, use every 5th dot so they do not turn into a grey wash.
+    let gap = DOT_GAP * zoom;
+    while (gap < 10) gap *= 5;
+
+    // Scene (0, 0) is at screen (scrollX * zoom, scrollY * zoom); dots are centred in each tile
+    const offsetX = ((appState.scrollX * zoom) % gap) - gap / 2;
+    const offsetY = ((appState.scrollY * zoom) % gap) - gap / 2;
+
+    wrapper.style.setProperty("--dot-gap", `${gap}px`);
+    wrapper.style.setProperty("--dot-r", `${Math.min(1.5, Math.max(1, zoom))}px`);
+    wrapper.style.setProperty("--dot-x", `${offsetX}px`);
+    wrapper.style.setProperty("--dot-y", `${offsetY}px`);
+  };
+
   const HandleCanvas = (
     elements: readonly any[],
     appState: any,
     files: any
   ) => {
+    SyncDots(appState);
     TrackSelection(elements, appState);
 
     // Keep the custom toolbar in sync when Excalidraw changes the tool itself
@@ -259,7 +282,8 @@ function Whiteboard({ onApiReady, isLoaded = true, onSaveReady, onSaveStatus }: 
 
     const blob = await exportToBlob({
       elements: visibleElements,
-      appState: { ...appState, exportBackground: true },
+      // The live canvas is transparent (dots behind it); a JPEG needs a real colour
+      appState: { ...appState, exportBackground: true, viewBackgroundColor: "#ffffff" },
       files,
       maxWidthOrHeight: 400,
       mimeType: "image/jpeg", // PNG ignores quality
@@ -589,15 +613,18 @@ function Whiteboard({ onApiReady, isLoaded = true, onSaveReady, onSaveStatus }: 
           EXCALIDRAW
       ========================== */}
 
-      <div className="excalidraw-wrapper">
+      <div ref={dotsRef} className="excalidraw-wrapper">
         <Excalidraw
           // @ts-ignore
           excalidrawAPI={(api) => {
             setExcalidrawAPI(api);
             onApiReady?.(api);
           }}
+          // Transparent from the first paint, so the dots show before the board loads
+          initialData={{ appState: { viewBackgroundColor: "transparent" } }}
           onChange={HandleCanvas}
-          theme={canvasTheme}
+          // Canvas stays light even when the app is in dark mode
+          theme="light"
         />
       </div>
 

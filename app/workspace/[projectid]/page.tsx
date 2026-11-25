@@ -1,7 +1,7 @@
 "use client"
 import React, { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
 import WorkspaceHeader from '@/components/custom/workspace/WorkspaceHeader'
@@ -37,6 +37,35 @@ function workspace() {
     toast.add(ok
       ? { title: "Saved", type: "success" }
       : { title: "Save failed", description: "Check your internet and try again.", type: "error" });
+  };
+
+  // Logo -> dashboard. Unsaved drawing is saved first; navigate only if that worked.
+  const router = useRouter();
+  const [leaving, setLeaving] = useState(false);
+  const handleBackToDashboard = async (e: React.MouseEvent<HTMLAnchorElement>) => {
+    // New tab / window: this tab stays open, nothing to save
+    if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) return;
+
+    if (leaving) {
+      e.preventDefault(); // already saving, ignore extra clicks
+      return;
+    }
+    // Not loaded yet or nothing changed: let the Link navigate normally
+    if (!isLoaded || !saveNowRef.current || saveStatus === 'saved') return;
+
+    e.preventDefault();
+    setLeaving(true);
+    const ok = await saveNowRef.current();
+    if (ok) {
+      router.push('/dashboard');
+      return; // keep `leaving` on until the page changes
+    }
+    setLeaving(false);
+    toast.add({
+      title: "Save failed",
+      description: "Board abhi save nahi hua. Dashboard pe jaane se pehle dobara try karo.",
+      type: "error",
+    });
   };
 
   // Ctrl+S / Cmd+S saves the board. Capture phase on window, so it runs before
@@ -92,6 +121,8 @@ function workspace() {
         elements: restoreElements(elements, null),
         appState: {
           ...restoreAppState(savedAppState, null),
+          // Dotted background lives behind the canvas. Old boards saved a colour here, override it.
+          viewBackgroundColor: "transparent",
           // Settings > Whiteboard: grid and the font for new text, on every board
           gridModeEnabled: settings.grid,
           currentItemFontFamily: {
@@ -149,11 +180,13 @@ function workspace() {
         return;
       }
 
+      // The live canvas is transparent (dots are CSS), so give the image a solid white background
       const blob = await exportToBlob({
         elements,
         appState: {
           ...excalidrawAPI.getAppState(),
           exportBackground: true,
+          viewBackgroundColor: "#ffffff",
         },
         files: excalidrawAPI.getFiles(),
         mimeType: "image/png",
@@ -183,6 +216,8 @@ function workspace() {
         projectId={String(projectid)}
         isPublic={isPublic}
         onShareChange={setIsPublic}
+        onLogoClick={handleBackToDashboard}
+        leaving={leaving}
         onExport={handleExportImage}
         canExport={activeTab == 'WhiteBoard' && !!excalidrawAPI}
         projectName={projectName}

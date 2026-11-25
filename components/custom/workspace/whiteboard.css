@@ -10,9 +10,26 @@
   background: #ffffff;
 }
 
+/* Dotted canvas: Excalidraw's background is transparent, the dots live here.
+   Whiteboard.tsx keeps --dot-* in sync with zoom and scroll. */
 .excalidraw-wrapper {
+  --dot-bg: #ffffff;
+  --dot-color: #d4d4d8;
+  --dot-gap: 20px;
+  --dot-r: 1px;
+  --dot-x: 0px;
+  --dot-y: 0px;
+
   width: 100%;
   height: 100%;
+  background-color: var(--dot-bg);
+  background-image: radial-gradient(
+    circle at center,
+    var(--dot-color) var(--dot-r),
+    transparent calc(var(--dot-r) + 0.5px)
+  );
+  background-size: var(--dot-gap) var(--dot-gap);
+  background-position: var(--dot-x) var(--dot-y);
 }
 
 
